@@ -1,10 +1,11 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 
 namespace Depso.CSharp;
 
 public class CodeBuilder
 {
+	public const string NewLine = "\n";
+
 	private readonly StringBuilder _builder;
 
 	public int IndentationLevel { get; private set; }
@@ -38,7 +39,7 @@ public class CodeBuilder
 
 	public int AppendLine(string text, bool indent = true)
 	{
-		int count = text.Length + Environment.NewLine.Length;
+		int count = text.Length + NewLine.Length;
 
 		if (indent)
 		{
@@ -54,7 +55,7 @@ public class CodeBuilder
 	public int AppendLine()
 	{
 		_builder.AppendLine();
-		return Environment.NewLine.Length;
+		return NewLine.Length;
 	}
 
 	public int Insert(string text, int offset, bool indent = false)

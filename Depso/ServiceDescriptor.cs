@@ -14,9 +14,7 @@ public class ServiceDescriptor
 	public INamedTypeSymbol ServiceType { get; init; }
 	public INamedTypeSymbol? ImplementationType { get; init; }
 	public IReadOnlyList<INamedTypeSymbol>? AlsoRegisterAs { get; init; }
-
 	public SyntaxNode? Factory { get; init; }
-	public string? LambdaFactory { get; private set; }
 
 	public INamedTypeSymbol ConcreteType => ImplementationType ?? ServiceType;
 
@@ -70,12 +68,7 @@ public class ServiceDescriptor
 			}
 		}
 	}
-
-	public void SetLambdaFactory(string lambdaFactory)
-	{
-		LambdaFactory = lambdaFactory;
-	}
-
+	
 	public string GetFieldName()
 	{
 		ITypeSymbol symbol = ImplementationType ?? ServiceType;

@@ -47,7 +47,7 @@ public class MethodBaseBuilder : ModifierBuilder, IDisposable
 
 		if (onNewLine)
 		{
-			int count = CodeBuilder.Insert(Environment.NewLine, insertIndex);
+			int count = CodeBuilder.Insert(CodeBuilder.NewLine, insertIndex);
 			count += CodeBuilder.Insert("", insertIndex + count, indent: true);
 				
 			insertIndex += count;

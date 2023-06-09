@@ -33,6 +33,16 @@ public partial class Provider
         }
     }
 
+    private global::Provider.RegistrationModifier ImportModule<T>()
+    {
+        return global::Provider.RegistrationModifier.Instance;
+    }
+
+    private global::Provider.RegistrationModifier ImportModule(global::System.Type moduleType)
+    {
+        return global::Provider.RegistrationModifier.Instance;
+    }
+
     private global::Provider.RegistrationModifier AddSingleton(global::System.Type serviceType)
     {
         return global::Provider.RegistrationModifier.Instance;

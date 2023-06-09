@@ -119,7 +119,10 @@ public abstract class CreateMethodsGenerator : IGenerator
 
 		using (codeBuilder.Method(returnType: fieldTypeName, name: methodName).Private())
 		{
-			string factoryInvocation = generationContext.GetFactoryInvocation(serviceDescriptor.Factory!);
+			string factoryInvocation = generationContext.GetFactoryInvocation(
+				serviceDescriptor.Factory!,
+				serviceProviderParameter: "this",
+				replaceServiceProviderToThis: true);
 
 			using (codeBuilder.Lock(Constants.LockFieldName))
 			{

@@ -21,6 +21,7 @@ public class Constants
 
     public const string RegistrationModifierClassName = "RegistrationModifier";
     public const string ScopeClassName = "Scope";
+    public const string GeneratedModuleAttributeClassName = "GeneratedServiceProviderModuleAttribute";
 
     public const string GetServiceMethodName = "GetService";
     public const string RegisterServicesMethodName = "RegisterServices";
@@ -32,6 +33,7 @@ public class Constants
     public const string CreateDisposableMethodNameSuffix = "AddDisposable";
     public const string ThrowIfDisposedMethodName = "ThrowIfDisposed";
     
+    public const string ImportModuleMethodName = "ImportModule";
     public const string SingletonMethodName = "AddSingleton";
     public const string ScopedMethodName = "AddScoped";
     public const string TransientMethodName = "AddTransient";

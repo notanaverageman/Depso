@@ -20,8 +20,16 @@ public static class Diagnostics
 		DiagnosticSeverity.Error,
 		true);
 
-	public static readonly DiagnosticDescriptor RegisterServicesMethodBodyNotFound = new(
+	public static readonly DiagnosticDescriptor RegisterServicesStaticMethodNotFound = new(
 		"DEP003",
+		$"{Constants.RegisterServicesMethodName} method not found",
+		$"Method private static void {Constants.RegisterServicesMethodName}() not found on class {0}",
+		"Usage",
+		DiagnosticSeverity.Error,
+		true);
+
+	public static readonly DiagnosticDescriptor RegisterServicesMethodBodyNotFound = new(
+		"DEP004",
 		$"{Constants.RegisterServicesMethodName} method body not found",
 		$"{Constants.RegisterServicesMethodName} method body not found",
 		"Usage",
@@ -29,7 +37,7 @@ public static class Diagnostics
 		true);
 
 	public static readonly DiagnosticDescriptor IllegalStatement = new(
-		"DEP004",
+		"DEP005",
 		$"Illegal statement on {Constants.RegisterServicesMethodName} method",
 		$"{Constants.RegisterServicesMethodName} method body contains illegal statements.",
 		"Usage",
@@ -37,7 +45,7 @@ public static class Diagnostics
 		true);
 
 	public static readonly DiagnosticDescriptor RecursiveDependency = new(
-		"DEP005",
+		"DEP006",
 		"Recursive dependency detected",
 		"Recursive dependency detected while graph. Recursive chains:\n{0}",
 		"Usage",

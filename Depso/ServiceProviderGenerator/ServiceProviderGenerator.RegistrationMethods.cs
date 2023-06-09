@@ -5,7 +5,7 @@ namespace Depso;
 
 public partial class ServiceProviderGenerator
 {
-	private static string CreateRegistrationMethods(INamedTypeSymbol classSymbol)
+	private static string CreateRegistrationMethods(INamedTypeSymbol classSymbol, bool isStatic)
 	{
 		CodeBuilder builder = new();
 
@@ -18,9 +18,36 @@ public partial class ServiceProviderGenerator
 		using (AddNamespace(classSymbol, builder))
 		using (AddClass(classSymbol, builder))
 		{
+			string systemType = Constants.TypeMetadataName.WithGlobalPrefix();
 			string registrationType = $"{classSymbol.ToDisplayString()}.{Constants.RegistrationModifierClassName}".WithGlobalPrefix();
 
 			AddRegistrationModifierClass(builder, registrationType);
+			builder.AppendLine();
+
+			using (MethodBuilder methodBuilder = builder.Method(registrationType, Constants.ImportModuleMethodName).Private())
+			{
+				if (isStatic)
+				{
+					methodBuilder.SetStatic();
+				}
+
+				methodBuilder.AddTypeParameter("T");
+				builder.AppendLine($"return {registrationType}.Instance;");
+			}
+
+			builder.AppendLine();
+
+			using (MethodBuilder methodBuilder = builder.Method(registrationType, Constants.ImportModuleMethodName).Private())
+			{
+				if (isStatic)
+				{
+					methodBuilder.SetStatic();
+				}
+
+				methodBuilder.AddParameter(systemType, "moduleType");
+				builder.AppendLine($"return {registrationType}.Instance;");
+			}
+
 			builder.AppendLine();
 			
 			AddLifetime(Constants.SingletonMethodName);
@@ -29,11 +56,14 @@ public partial class ServiceProviderGenerator
 
 			void AddLifetime(string name)
 			{
-				string typeType = Constants.TypeMetadataName.WithGlobalPrefix();
-
 				using (MethodBuilder methodBuilder = builder.Method(registrationType, name).Private())
 				{
-					methodBuilder.AddParameter(typeType, "serviceType");
+					if (isStatic)
+					{
+						methodBuilder.SetStatic();
+					}
+
+					methodBuilder.AddParameter(systemType, "serviceType");
 					builder.AppendLine($"return {registrationType}.Instance;");
 				}
 
@@ -41,8 +71,13 @@ public partial class ServiceProviderGenerator
 
 				using (MethodBuilder methodBuilder = builder.Method(registrationType, name).Private())
 				{
-					methodBuilder.AddParameter(typeType, "serviceType");
-					methodBuilder.AddParameter(typeType, "implementationType");
+					if (isStatic)
+					{
+						methodBuilder.SetStatic();
+					}
+
+					methodBuilder.AddParameter(systemType, "serviceType");
+					methodBuilder.AddParameter(systemType, "implementationType");
 
 					builder.AppendLine($"return {registrationType}.Instance;");
 				}
@@ -51,6 +86,11 @@ public partial class ServiceProviderGenerator
 
 				using (MethodBuilder methodBuilder = builder.Method($"{registrationType}", name).Private())
 				{
+					if (isStatic)
+					{
+						methodBuilder.SetStatic();
+					}
+
 					methodBuilder.AddTypeParameter("TService");
 					builder.AppendLine($"return {registrationType}.Instance;");
 				}
@@ -59,6 +99,11 @@ public partial class ServiceProviderGenerator
 
 				using (MethodBuilder methodBuilder = builder.Method($"{registrationType}", name).Private())
 				{
+					if (isStatic)
+					{
+						methodBuilder.SetStatic();
+					}
+
 					methodBuilder.AddTypeParameter("TService");
 					methodBuilder.AddTypeParameter("TImplementation");
 					methodBuilder.AddWhereClause("TImplementation : TService");
@@ -70,6 +115,11 @@ public partial class ServiceProviderGenerator
 
 				using (MethodBuilder methodBuilder = builder.Method($"{registrationType}", name).Private())
 				{
+					if (isStatic)
+					{
+						methodBuilder.SetStatic();
+					}
+
 					methodBuilder.AddTypeParameter("TService");
 					
 					methodBuilder.AddParameter(

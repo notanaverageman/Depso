@@ -105,4 +105,10 @@ public class GeneratorTests : TestBase
 	{
 		GenerateAndCheck<ServiceProviderGenerator>();
 	}
+
+	[Test]
+	public void Import_modules()
+	{
+		GenerateAndCheck<ServiceProviderGenerator>();
+	}
 }

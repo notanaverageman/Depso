@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Linq;
 using Microsoft.CodeAnalysis.CSharp;
 using System.Collections.Immutable;
+using System.Text;
 using Depso.CSharp;
 using Depso.Generators;
 using Depso.Generators.Scope;
@@ -21,7 +22,13 @@ public partial class ServiceProviderGenerator : IIncrementalGenerator
 	{
 		context.RegisterPostInitializationOutput(i =>
 		{
-			i.AddSource($"{Constants.GeneratorNamespace}.Attributes.g.cs", ServiceProvider.SourceCode);
+			i.AddSource(
+				$"{Constants.GeneratorNamespace}.Attributes.ServiceProvider.g.cs",
+				ServiceProvider.SourceCode);
+
+			i.AddSource(
+				$"{Constants.GeneratorNamespace}.Attributes.ServiceProviderModule.g.cs",
+				ServiceProviderModule.SourceCode);
 		});
 
 		IncrementalValuesProvider<ClassDeclarationSyntax?> classDeclarations = context.SyntaxProvider
@@ -54,7 +61,13 @@ public partial class ServiceProviderGenerator : IIncrementalGenerator
 			return null;
 		}
 
-		if (symbol.GetAttributes().Any(x => x.AttributeClass?.ToDisplayString() == ServiceProvider.FullName))
+		Func<AttributeData, bool> attributeChecker = x =>
+		{
+			string? displayString = x.AttributeClass?.ToDisplayString();
+			return displayString == ServiceProvider.FullName || displayString == ServiceProviderModule.FullName;
+		};
+
+		if (symbol.GetAttributes().Any(attributeChecker))
 		{
 			return classSyntax;
 		}
@@ -102,88 +115,88 @@ public partial class ServiceProviderGenerator : IIncrementalGenerator
 				continue;
 			}
 
-			string registrationMethods = CreateRegistrationMethods(classSymbol);
-			SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(registrationMethods);
+			bool isModule = classSymbol
+				.GetAttributes()
+				.Any(x => x.AttributeClass?.ToDisplayString() == ServiceProviderModule.FullName);
 
-			context.AddSource($"{Constants.GeneratorNamespace}.{classSymbol.ToDisplayString()}.RegistrationMethods.g.cs", registrationMethods);
-
-			compilation = compilation.AddSyntaxTrees(syntaxTree);
-			classSymbol = compilation.GetSemanticModel(@class.SyntaxTree).GetDeclaredSymbol(@class)!;
-
-			IMethodSymbol? registerServicesMethod = classSymbol.GetMembers()
-				.OfType<IMethodSymbol>()
-				.FirstOrDefault(x => x.IsRegisterServicesMethod());
-
-			if (registerServicesMethod == null)
-			{
-				Diagnostic diagnostic = Diagnostic.Create(
-					Diagnostics.RegisterServicesMethodNotFound,
-					Location.Create(@class.SyntaxTree, @class.Identifier.Span),
-					classSymbol.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
-
-				context.ReportDiagnostic(diagnostic);
-
-				continue;
-			}
-
-			GenerationContext generationContext = new(
-				context,
-				compilation,
-				knownTypes,
-				@class,
-				classSymbol,
-				registerServicesMethod);
-
-			if (!classSymbol.ContainingSymbol.Equals(classSymbol.ContainingNamespace, SymbolEqualityComparer.Default))
-			{
-				// TODO: Handle nested classes.
-				return;
-			}
-
-			if (!PopulateServices(generationContext))
-			{
-				return;
-			}
-			
-			generationContext.ComputeDependencyGraph();
-
-			if (!generationContext.IsDependencyGraphValid())
-			{
-				// TODO: Add the source even if it is invalid.
-				return;
-			}
-
-			string classSource = ProcessClass(generationContext);
-			string? scopeClassSource = ProcessScopeClass(generationContext);
-			
-			context.AddSource(
-				$"{Constants.GeneratorNamespace}.{classSymbol.ToDisplayString()}.g.cs",
-				classSource);
-
-			if (scopeClassSource != null)
-			{
-				context.AddSource(
-					$"{Constants.GeneratorNamespace}.{classSymbol.ToDisplayString()}.Scoped.g.cs",
-					scopeClassSource);
-			}
+			ProcessServiceProvider(compilation, context, knownTypes, @class, classSymbol, isModule);
 		}
 	}
 
-	private static IDisposable AddNamespace(INamedTypeSymbol classSymbol, CodeBuilder builder)
+	private static void ProcessServiceProvider(
+		Compilation compilation,
+		SourceProductionContext context,
+		KnownTypes knownTypes,
+		ClassDeclarationSyntax @class,
+		INamedTypeSymbol classSymbol,
+		bool isModule)
 	{
-		return classSymbol.ContainingNamespace.IsGlobalNamespace
-			? Disposable.Empty
-			: builder.Namespace(classSymbol.ContainingNamespace.ToDisplayString());
-	}
+		string registrationMethods = CreateRegistrationMethods(classSymbol, isStatic: isModule);
+		SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(registrationMethods);
 
-	private static ClassBuilder AddClass(INamedTypeSymbol classSymbol, CodeBuilder builder)
-	{
-		string visibility = SyntaxFacts.GetText(classSymbol.DeclaredAccessibility);
+		context.AddSource($"{Constants.GeneratorNamespace}.{classSymbol.ToDisplayString()}.RegistrationMethods.g.cs", registrationMethods);
 
-		ClassBuilder classBuilder = builder.Class(classSymbol.Name).Partial();
-		classBuilder.Visibility(visibility);
+		compilation = compilation.AddSyntaxTrees(syntaxTree);
+		classSymbol = compilation.GetSemanticModel(@class.SyntaxTree).GetDeclaredSymbol(@class)!;
 
-		return classBuilder;
+		IMethodSymbol? registerServicesMethod = classSymbol.GetMembers()
+			.OfType<IMethodSymbol>()
+			.FirstOrDefault(x => x.IsRegisterServicesMethod(isStatic: isModule));
+
+		if (registerServicesMethod == null)
+		{
+			DiagnosticDescriptor descriptor = isModule
+				? Diagnostics.RegisterServicesStaticMethodNotFound
+				: Diagnostics.RegisterServicesMethodNotFound;
+
+			Diagnostic diagnostic = Diagnostic.Create(
+				descriptor,
+				Location.Create(@class.SyntaxTree, @class.Identifier.Span),
+				classSymbol.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
+
+			context.ReportDiagnostic(diagnostic);
+
+			return;
+		}
+
+		GenerationContext generationContext = new(
+			context,
+			compilation,
+			knownTypes,
+			@class,
+			classSymbol,
+			registerServicesMethod,
+			isModule);
+
+		if (!classSymbol.ContainingSymbol.Equals(classSymbol.ContainingNamespace, SymbolEqualityComparer.Default))
+		{
+			// TODO: Handle nested classes.
+			return;
+		}
+
+		if (!PopulateServices(generationContext))
+		{
+			return;
+		}
+
+		generationContext.ComputeDependencyGraph();
+
+		if (!generationContext.IsDependencyGraphValid())
+		{
+			// TODO: Add the source even if it is invalid.
+			return;
+		}
+		
+		string classSource = ProcessClass(generationContext);
+		string scopeClassSource = ProcessScopeClass(generationContext);
+
+		context.AddSource(
+			$"{Constants.GeneratorNamespace}.{classSymbol.ToDisplayString()}.g.cs",
+			classSource);
+
+		context.AddSource(
+			$"{Constants.GeneratorNamespace}.{classSymbol.ToDisplayString()}.Scoped.g.cs",
+			scopeClassSource);
 	}
 
 	private static string ProcessClass(GenerationContext generationContext)
@@ -199,57 +212,83 @@ public partial class ServiceProviderGenerator : IIncrementalGenerator
 		codeBuilder.AppendLine();
 
 		using (AddNamespace(classSymbol, codeBuilder))
-		using (ClassBuilder classBuilder = AddClass(classSymbol, codeBuilder))
 		{
-			AddClassInterfaces(generationContext.KnownTypes, classBuilder);
-
-			List<IGenerator> generators = new()
+			if (generationContext.IsModule)
 			{
-				new SingletonGetServicesGenerator(),
-				new ScopedGetServicesGenerator(),
-				new TransientGetServicesGenerator(),
-				new EnumerableGetServicesGenerator(),
+				foreach (ServiceDescriptor serviceDescriptor in generationContext.ServiceDescriptors)
+				{
+					generationContext.IndexManager.Add(serviceDescriptor);
+				}
+				
+				AddModuleAttributes(codeBuilder);
 
-				new LockGenerator(),
-				new RootScopeGenerator(),
-				new CommonDisposableFieldsGenerator(),
-				new DisposableFieldsGenerator(),
-				new AsyncDisposableFieldsGenerator(),
-				new SingletonFieldsGenerator(),
-				new SingletonFieldsFactoryGenerator(),
-				new EnumerableFieldsGenerator(),
+				foreach (ServiceDescriptor serviceDescriptor in generationContext.ServiceDescriptors)
+				{
+					AddRegistrationAttributeToModuleClass(generationContext, codeBuilder, serviceDescriptor);
+				}
 
-				new GetServiceMethodGenerator(),
-				new GetServiceGenericMethodGenerator(),
-
-				new SingletonCreateMethodsGenerator(),
-				new TransientCreateMethodsGenerator(),
-
-				new CreateScopeMethodGenerator(),
-
-				new DisposeMethodGenerator(),
-				new DisposeAsyncMethodGenerator(),
-				new ThrowIfDisposedMethodGenerator(),
-
-				new AddDisposableMethodGenerator(),
-				new AddAsyncDisposableMethodGenerator(),
-			};
-
-			foreach (IGenerator generator in generators)
-			{
-				generator.Generate(generationContext);
+				codeBuilder.AppendLine($"[global::{Constants.GeneratedModuleAttributeClassName}]");
 			}
-			
-			foreach (Action<GenerationContext> action in generationContext.Actions)
+
+			using (ClassBuilder classBuilder = AddClass(classSymbol, codeBuilder))
 			{
-				action(generationContext);
+				if (generationContext.IsModule)
+				{
+					CreateModuleFactoryMethods(generationContext);
+				}
+				else
+				{
+					AddClassInterfaces(generationContext.KnownTypes, classBuilder);
+
+					List<IGenerator> generators = new()
+					{
+						new SingletonGetServicesGenerator(),
+						new ScopedGetServicesGenerator(),
+						new TransientGetServicesGenerator(),
+						new EnumerableGetServicesGenerator(),
+
+						new LockGenerator(),
+						new RootScopeGenerator(),
+						new CommonDisposableFieldsGenerator(),
+						new DisposableFieldsGenerator(),
+						new AsyncDisposableFieldsGenerator(),
+						new SingletonFieldsGenerator(),
+						new SingletonFieldsFactoryGenerator(),
+						new EnumerableFieldsGenerator(),
+
+						new GetServiceMethodGenerator(),
+						new GetServiceGenericMethodGenerator(),
+
+						new SingletonCreateMethodsGenerator(),
+						new TransientCreateMethodsGenerator(),
+
+						new CreateScopeMethodGenerator(),
+
+						new DisposeMethodGenerator(),
+						new DisposeAsyncMethodGenerator(),
+						new ThrowIfDisposedMethodGenerator(),
+
+						new AddDisposableMethodGenerator(),
+						new AddAsyncDisposableMethodGenerator(),
+					};
+
+					foreach (IGenerator generator in generators)
+					{
+						generator.Generate(generationContext);
+					}
+
+					foreach (Action<GenerationContext> action in generationContext.Actions)
+					{
+						action(generationContext);
+					}
+				}
 			}
 		}
 
 		return codeBuilder.ToString();
 	}
 
-	private static string? ProcessScopeClass(GenerationContext generationContext)
+	private static string ProcessScopeClass(GenerationContext generationContext)
 	{
 		generationContext.Reset();
 
@@ -318,6 +357,149 @@ public partial class ServiceProviderGenerator : IIncrementalGenerator
 		return codeBuilder.ToString();
 	}
 	
+	private static void AddModuleAttributes(CodeBuilder codeBuilder)
+	{
+		const string generatedModuleAttribute = $$"""
+			[global::System.AttributeUsage(global::System.AttributeTargets.Class)]
+			file class {{Constants.GeneratedModuleAttributeClassName}} : global::System.Attribute
+			{
+			}
+			""";
+
+		codeBuilder.AppendLine(generatedModuleAttribute);
+		codeBuilder.AppendLine();
+
+		AddAttributeClass("Singleton");
+		AddAttributeClass("Scoped");
+		AddAttributeClass("Transient");
+
+		void AddAttributeClass(string name)
+		{
+			string attributeClass = $$"""
+				[global::System.AttributeUsage(global::System.AttributeTargets.Class, AllowMultiple = true)]
+				file class {{name}}Attribute : global::System.Attribute
+				{
+				    public {{name}}Attribute(
+				        global::System.Type serviceType,
+				        global::System.Type? implementationType = null,
+				        string? factory = null,
+				        params global::System.Type[] registerAlsoAs)
+				    {
+				    }
+				}
+				""";
+
+			codeBuilder.AppendLine(attributeClass);
+			codeBuilder.AppendLine();
+		}
+	}
+
+	private static void CreateModuleFactoryMethods(GenerationContext generationContext)
+	{
+		CodeBuilder codeBuilder = generationContext.CodeBuilder;
+
+		foreach (ServiceDescriptor serviceDescriptor in generationContext.ServiceDescriptors)
+		{
+			SyntaxNode? factory = serviceDescriptor.Factory;
+
+			if (factory == null)
+			{
+				continue;
+			}
+
+			ParameterSyntax? parameter = null;
+
+			if (factory is AnonymousMethodExpressionSyntax anonymousMethod)
+			{
+				parameter = anonymousMethod.ParameterList?.Parameters.FirstOrDefault();
+			}
+			else if (factory is SimpleLambdaExpressionSyntax simpleLambdaExpression)
+			{
+				parameter = simpleLambdaExpression.Parameter;
+			}
+			else if (factory is ParenthesizedLambdaExpressionSyntax parenthesizedLambdaExpression)
+			{
+				parameter = parenthesizedLambdaExpression.ParameterList.Parameters.FirstOrDefault();
+			}
+
+			string serviceProviderParameter = parameter == null
+				? "serviceProvider"
+				: parameter.Identifier.ToString();
+
+			string factoryMethodName = serviceDescriptor.GetFactoryMethodName();
+			string factoryInvocation = generationContext.GetFactoryInvocation(
+				factory,
+				serviceProviderParameter,
+				replaceServiceProviderToThis: false);
+
+			INamedTypeSymbol serviceType = serviceDescriptor.ServiceType;
+
+			string fieldTypeName = serviceType
+				.WithNullableAnnotation(NullableAnnotation.None)
+				.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+
+			generationContext.AddNewLineIfNecessary();
+
+			using (MethodBuilder method = codeBuilder.Method(returnType: fieldTypeName, name: factoryMethodName).Public().Static())
+			{
+				method.AddParameter(
+					generationContext.KnownTypes.IServiceProvider.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+					serviceProviderParameter);
+
+				codeBuilder.AppendLine(factoryInvocation);
+			}
+
+			generationContext.AddNewLine = true;
+		}
+	}
+
+	private static void AddRegistrationAttributeToModuleClass(
+		GenerationContext generationContext,
+		CodeBuilder codeBuilder,
+		ServiceDescriptor serviceDescriptor)
+	{
+		INamedTypeSymbol service = serviceDescriptor.ServiceType;
+		INamedTypeSymbol? implementation = serviceDescriptor.ImplementationType;
+
+		StringBuilder stringBuilder = new();
+
+		stringBuilder.Append($"typeof({service.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)})");
+
+		if (implementation != null)
+		{
+			stringBuilder.Append(", ");
+			stringBuilder.Append($"typeof({implementation.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)})");
+		}
+		else
+		{
+			stringBuilder.Append(", null");
+		}
+
+		if (serviceDescriptor.Factory != null)
+		{
+			string factoryMethodName = serviceDescriptor.GetFactoryMethodName();
+			string className = generationContext.ClassSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+
+			stringBuilder.Append(", ");
+			stringBuilder.Append($"\"{className}.{factoryMethodName}\"");
+		}
+		else
+		{
+			stringBuilder.Append(", null");
+		}
+
+		if (serviceDescriptor.AlsoRegisterAs != null)
+		{
+			foreach (INamedTypeSymbol alsoRegisterAs in serviceDescriptor.AlsoRegisterAs)
+			{
+				stringBuilder.Append(", ");
+				stringBuilder.Append($"typeof({alsoRegisterAs.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)})");
+			}
+		}
+
+		codeBuilder.AppendLine($"[global::{serviceDescriptor.Lifetime}({stringBuilder})]");
+	}
+
 	private static void AddClassInterfaces(KnownTypes knownTypes, ClassBuilder classBuilder)
 	{
 		void AddInterfaceIfPossible(INamedTypeSymbol? symbol, string interfaceName)
@@ -334,5 +516,22 @@ public partial class ServiceProviderGenerator : IIncrementalGenerator
 		AddInterfaceIfPossible(knownTypes.IServiceScope, Constants.IServiceScopeMetadataName);
 		AddInterfaceIfPossible(knownTypes.IServiceScopeFactory, Constants.IServiceScopeFactoryMetadataName);
 		AddInterfaceIfPossible(knownTypes.IServiceProviderIsService, Constants.IServiceProviderIsServiceMetadataName);
+	}
+
+	private static IDisposable AddNamespace(INamedTypeSymbol classSymbol, CodeBuilder builder)
+	{
+		return classSymbol.ContainingNamespace.IsGlobalNamespace
+			? Disposable.Empty
+			: builder.Namespace(classSymbol.ContainingNamespace.ToDisplayString());
+	}
+
+	private static ClassBuilder AddClass(INamedTypeSymbol classSymbol, CodeBuilder builder)
+	{
+		string visibility = SyntaxFacts.GetText(classSymbol.DeclaredAccessibility);
+
+		ClassBuilder classBuilder = builder.Class(classSymbol.Name).Partial();
+		classBuilder.Visibility(visibility);
+
+		return classBuilder;
 	}
 }

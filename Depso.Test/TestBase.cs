@@ -74,8 +74,8 @@ public abstract class TestBase
 				{
 					Debug.WriteLine(generated);
 				}
-
-				CheckEquality(generated, expected);
+				
+				CheckEquality(generated, expected, expectedName);
 			}
 		});
 	}
@@ -256,12 +256,12 @@ public abstract class TestBase
 		});
 	}
 
-	private void CheckEquality(string generated, string expected)
+	private void CheckEquality(string generated, string expected, string fileName)
 	{
 		generated = generated.ReplaceLineEndings();
 		expected = expected.ReplaceLineEndings();
 
-		Assert.That(generated, Is.EqualTo(expected));
+		Assert.That(generated, Is.EqualTo(expected), $"Checking generated code for: {fileName}");
 	}
 
 	protected string ReadResource(string resource)

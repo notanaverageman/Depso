@@ -12,13 +12,15 @@ public class FactoryRewriter : CSharpSyntaxRewriter
 {
 	private readonly Compilation _compilation;
 	private readonly bool _isScopeClass;
+	private readonly bool _replaceServiceProviderToThis;
 
 	private HashSet<SyntaxNode>? _nodesToReplace;
 
-	public FactoryRewriter(Compilation compilation, bool isScopeClass)
+	public FactoryRewriter(Compilation compilation, bool isScopeClass, bool replaceServiceProviderToThis)
 	{
 		_compilation = compilation;
 		_isScopeClass = isScopeClass;
+		_replaceServiceProviderToThis = replaceServiceProviderToThis;
 	}
 
 	public override SyntaxNode? Visit(SyntaxNode? node)
@@ -94,9 +96,16 @@ public class FactoryRewriter : CSharpSyntaxRewriter
 	
 	private SyntaxNode ToFullyQualifiedName(SyntaxNode node)
 	{
-		SymbolInfo symbolInfo = _compilation
-			.GetSemanticModel(node.SyntaxTree)
-			.GetSymbolInfo(node);
+		if (_compilation.ContainsSyntaxTree(node.SyntaxTree))
+		{
+			
+		}
+
+		SymbolInfo symbolInfo = _compilation.ContainsSyntaxTree(node.SyntaxTree)
+			? _compilation
+				.GetSemanticModel(node.SyntaxTree)
+				.GetSymbolInfo(node)
+			: new SymbolInfo();
 
 		if (symbolInfo.Symbol is INamedTypeSymbol namedTypeSymbol)
 		{
@@ -160,7 +169,7 @@ public class FactoryRewriter : CSharpSyntaxRewriter
 
 	private bool ReplaceNode(SyntaxNode? node, out SyntaxNode? replacement)
 	{
-		if (node != null && _nodesToReplace?.Contains(node) == true)
+		if (_replaceServiceProviderToThis && node != null && _nodesToReplace?.Contains(node) == true)
 		{
 			replacement = ThisExpression();
 			return true;

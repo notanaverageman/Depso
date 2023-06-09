@@ -45,7 +45,7 @@ public static class SymbolExtensions
 		return e.TypeArguments.First() as INamedTypeSymbol;
 	}
 
-	public static bool IsRegisterServicesMethod(this IMethodSymbol methodSymbol)
+	public static bool IsRegisterServicesMethod(this IMethodSymbol methodSymbol, bool isStatic)
 	{
 		if (!methodSymbol.ReturnsVoid)
 		{
@@ -53,6 +53,16 @@ public static class SymbolExtensions
 		}
 
 		if (methodSymbol.IsAbstract || methodSymbol.IsGenericMethod || methodSymbol.IsVirtual)
+		{
+			return false;
+		}
+
+		if (isStatic && !methodSymbol.IsStatic)
+		{
+			return false;
+		}
+
+		if (!isStatic && methodSymbol.IsStatic)
 		{
 			return false;
 		}

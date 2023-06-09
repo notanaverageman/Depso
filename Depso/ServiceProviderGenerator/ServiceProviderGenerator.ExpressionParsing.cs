@@ -1,8 +1,10 @@
 ﻿using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
-using CSharpExtensions = Microsoft.CodeAnalysis.CSharp.CSharpExtensions;
 
 namespace Depso;
 
@@ -10,21 +12,31 @@ public partial class ServiceProviderGenerator
 {
 	private static bool PopulateServices(GenerationContext generationContext)
 	{
-		IMethodSymbol registerServicesMethod = generationContext.RegisterServicesMethod;
-		SyntaxReference syntaxReference = registerServicesMethod.DeclaringSyntaxReferences[0];
+		return PopulateServices(generationContext, generationContext.RegisterServicesMethod);
+	}
 
-		if (syntaxReference.GetSyntax() is not MethodDeclarationSyntax methodSyntax || methodSyntax.Body == null)
+	private static bool PopulateServices(GenerationContext generationContext, IMethodSymbol registerServicesMethod)
+	{
+		MethodDeclarationSyntax? methodSyntax = registerServicesMethod.DeclaringSyntaxReferences
+			.Select(x => x.GetSyntax())
+			.OfType<MethodDeclarationSyntax>()
+			.SingleOrDefault(x => x.Body != null);
+
+		if (methodSyntax == null)
 		{
+			SyntaxNode syntax = registerServicesMethod.DeclaringSyntaxReferences.First().GetSyntax();
+
 			Diagnostic diagnostic = Diagnostic.Create(
-				Diagnostics.RegisterServicesMethodNotFound,
-				Location.Create(syntaxReference.SyntaxTree, syntaxReference.Span));
+				Diagnostics.RegisterServicesStaticMethodNotFound,
+				Location.Create(syntax.SyntaxTree, syntax.Span),
+				registerServicesMethod.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
 
 			generationContext.SourceProductionContext.ReportDiagnostic(diagnostic);
 
 			return false;
 		}
 
-		foreach (StatementSyntax statement in methodSyntax.Body.Statements)
+		foreach (StatementSyntax statement in methodSyntax.Body!.Statements)
 		{
 			if (statement is not ExpressionStatementSyntax expressionStatement)
 			{
@@ -33,7 +45,6 @@ public partial class ServiceProviderGenerator
 			}
 
 			MemberAccessContext memberAccessContext = new();
-
 			ProcessExpression(generationContext, expressionStatement.Expression, memberAccessContext);
 		}
 
@@ -65,6 +76,157 @@ public partial class ServiceProviderGenerator
 		}
 	}
 
+	private static void ImportModule(GenerationContext generationContext, GenericNameSyntax generic)
+	{
+		if (generic.TypeArgumentList.Arguments.Count != 1)
+		{
+			ReportIllegalStatementDiagnostic(generationContext, generic);
+			return;
+		}
+
+		TypeSyntax moduleTypeSyntax = generic.TypeArgumentList.Arguments[0];
+
+		ISymbol? moduleTypeSymbol = ModelExtensions.GetSymbolInfo(generationContext.Compilation
+				.GetSemanticModel(moduleTypeSyntax.SyntaxTree), moduleTypeSyntax).Symbol;
+
+		if (moduleTypeSymbol is not INamedTypeSymbol moduleType)
+		{
+			ReportIllegalStatementDiagnostic(generationContext, moduleTypeSyntax);
+			return;
+		}
+
+		ImportModule(generationContext, moduleTypeSyntax, moduleType);
+	}
+
+	private static void ImportModule(GenerationContext generationContext, TypeSyntax typeSyntax)
+	{
+		ITypeSymbol? moduleTypeSymbol = ModelExtensions.GetTypeInfo(
+			generationContext.Compilation.GetSemanticModel(typeSyntax.SyntaxTree),
+			typeSyntax).Type;
+
+		if (moduleTypeSymbol is not INamedTypeSymbol moduleType)
+		{
+			ReportIllegalStatementDiagnostic(generationContext, typeSyntax);
+			return;
+		}
+
+		ImportModule(generationContext, typeSyntax, moduleType);
+	}
+
+	private static void ImportModule(
+		GenerationContext generationContext,
+		TypeSyntax moduleSyntax,
+		INamedTypeSymbol moduleType)
+	{
+		// Get RegisterServices method expressions from module class if it is defined
+		// in the same assembly.
+		// Otherwise, the services are extracted from the attributes on module class.
+
+		IMethodSymbol? registerServicesMethod = moduleType.GetMembers()
+			.OfType<IMethodSymbol>()
+			.FirstOrDefault(x => x.IsRegisterServicesMethod(isStatic: true));
+
+		AttributeData? generatedModuleAttribute = moduleType
+			.GetAttributes()
+			.FirstOrDefault(x => x.AttributeClass?.ToDisplayString() == Constants.GeneratedModuleAttributeClassName);
+
+		if (registerServicesMethod == null && generatedModuleAttribute == null)
+		{
+			Diagnostic diagnostic = Diagnostic.Create(
+				Diagnostics.RegisterServicesStaticMethodNotFound,
+				Location.Create(moduleSyntax.SyntaxTree, moduleSyntax.Span),
+				moduleType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
+
+			generationContext.SourceProductionContext.ReportDiagnostic(diagnostic);
+
+			return;
+		}
+
+		if (registerServicesMethod != null && registerServicesMethod.DeclaringSyntaxReferences.Length != 0)
+		{
+			// Parse the registration expressions inside the method body.
+			PopulateServices(generationContext, registerServicesMethod);
+		}
+		else if (generatedModuleAttribute != null)
+		{
+			// Get the registrations from attributes.
+			foreach (AttributeData attributeData in moduleType.GetAttributes())
+			{
+				ProcessModuleAttribute(generationContext, moduleSyntax, moduleType, attributeData);
+			}
+		}
+	}
+
+	private static void ProcessModuleAttribute(
+		GenerationContext generationContext,
+		TypeSyntax moduleSyntax,
+		INamedTypeSymbol moduleSymbol,
+		AttributeData attribute)
+	{
+		string? attributeName = attribute.AttributeClass?.ToDisplayString();
+		ImmutableArray<TypedConstant> arguments = attribute.ConstructorArguments;
+
+		if (attributeName == Constants.GeneratedModuleAttributeClassName)
+		{
+			return;
+		}
+
+		if (arguments.Length == 0)
+		{
+			ReportIllegalStatementDiagnostic(generationContext, moduleSyntax);
+			return;
+		}
+
+		Lifetime? lifetime = attributeName switch
+		{
+			$"{nameof(Lifetime.Singleton)}Attribute" => Lifetime.Singleton,
+			$"{nameof(Lifetime.Scoped)}Attribute" => Lifetime.Scoped,
+			$"{nameof(Lifetime.Transient)}Attribute" => Lifetime.Transient,
+			_ => null
+		};
+
+		if (lifetime == null)
+		{
+			ReportIllegalStatementDiagnostic(generationContext, moduleSyntax);
+			return;
+		}
+
+		if (arguments[0].Value is not INamedTypeSymbol serviceType)
+		{
+			ReportIllegalStatementDiagnostic(generationContext, moduleSyntax);
+			return;
+		}
+
+		MemberAccessContext memberAccessContext = new();
+
+		INamedTypeSymbol? implementationType = arguments.Length > 1 ? arguments[1].Value as INamedTypeSymbol : null;
+		string? factoryMethod = arguments.Length > 2 ? arguments[2].Value as string : null;
+		
+		if (arguments.Length > 3)
+		{
+			ImmutableArray<TypedConstant> array = arguments[3].Values;
+
+			for (int i = 0; i < array.Length; i++)
+			{
+				if (array[i].Value is INamedTypeSymbol argument)
+				{
+					memberAccessContext.AddAlsoRegisterAs(argument);
+				}
+			}
+		}
+
+		SyntaxNode? factorySyntax = factoryMethod == null
+			? null
+			: CSharpSyntaxTree.ParseText(factoryMethod).GetRoot();
+
+		generationContext.AddServiceDescriptor(new ServiceDescriptor(
+			lifetime.Value,
+			serviceType,
+			implementationType,
+			factorySyntax,
+			alsoRegisterAs: memberAccessContext.AlsoRegisterAs));
+	}
+
 	private static void ProcessMemberAccess(
 		GenerationContext generationContext,
 		MemberAccessExpressionSyntax memberAccess,
@@ -81,15 +243,15 @@ public partial class ServiceProviderGenerator
 		}
 
 		if (memberName.ValueText == Constants.AlsoAsMethodName &&
-		    memberAccess.Parent is InvocationExpressionSyntax { ArgumentList.Arguments.Count: 1 } invocationExpression &&
-		    invocationExpression.ArgumentList.Arguments.First().Expression is TypeOfExpressionSyntax typeOfExpression)
+			memberAccess.Parent is InvocationExpressionSyntax { ArgumentList.Arguments.Count: 1 } invocationExpression &&
+			invocationExpression.ArgumentList.Arguments.First().Expression is TypeOfExpressionSyntax typeOfExpression)
 		{
 			ProcessAlsoAs(typeOfExpression.Type);
 			return;
 		}
 
 		if (memberName.ValueText == Constants.AlsoAsMethodName &&
-		    memberAccess.Name is GenericNameSyntax { TypeArgumentList.Arguments.Count: 1 } genericName)
+			memberAccess.Name is GenericNameSyntax { TypeArgumentList.Arguments.Count: 1 } genericName)
 		{
 			ProcessAlsoAs(genericName.TypeArgumentList.Arguments.First());
 			return;
@@ -97,9 +259,8 @@ public partial class ServiceProviderGenerator
 
 		void ProcessAlsoAs(TypeSyntax typeSyntax)
 		{
-			TypeInfo typeInfo = generationContext.Compilation
-				.GetSemanticModel(typeSyntax.SyntaxTree)
-				.GetTypeInfo(typeSyntax);
+			TypeInfo typeInfo = ModelExtensions.GetTypeInfo(generationContext.Compilation
+					.GetSemanticModel(typeSyntax.SyntaxTree), typeSyntax);
 
 			if (typeInfo.Type is INamedTypeSymbol typeSymbol)
 			{
@@ -108,7 +269,7 @@ public partial class ServiceProviderGenerator
 
 			ProcessExpression(generationContext, memberAccess.Expression, memberAccessContext);
 		}
-		
+
 		ReportIllegalStatementDiagnostic(generationContext, memberAccess.Name);
 	}
 
@@ -118,6 +279,12 @@ public partial class ServiceProviderGenerator
 		MemberAccessContext memberAccessContext)
 	{
 		string identifier = generic.Identifier.Text;
+
+		if (identifier == Constants.ImportModuleMethodName)
+		{
+			ImportModule(generationContext, generic);
+			return;
+		}
 
 		Lifetime? lifetime = identifier switch
 		{
@@ -197,14 +364,13 @@ public partial class ServiceProviderGenerator
 
 			return;
 		}
-		
+
 		ReportIllegalStatementDiagnostic(generationContext, generic);
 
 		INamedTypeSymbol? GetSymbol(TypeSyntax typeSyntax)
 		{
-			TypeInfo typeInfo = generationContext.Compilation
-				.GetSemanticModel(typeSyntax.SyntaxTree)
-				.GetTypeInfo(typeSyntax);
+			TypeInfo typeInfo = ModelExtensions.GetTypeInfo(generationContext.Compilation
+					.GetSemanticModel(typeSyntax.SyntaxTree), typeSyntax);
 
 			return typeInfo.Type as INamedTypeSymbol;
 		}
@@ -215,7 +381,26 @@ public partial class ServiceProviderGenerator
 		IdentifierNameSyntax identifierName,
 		MemberAccessContext memberAccessContext)
 	{
+		if (identifierName.Parent is not InvocationExpressionSyntax invocation)
+		{
+			ReportIllegalStatementDiagnostic(generationContext, identifierName);
+			return;
+		}
+
+		SeparatedSyntaxList<ArgumentSyntax> arguments = invocation.ArgumentList.Arguments;
 		string identifier = identifierName.Identifier.Text;
+
+		if (identifier == Constants.ImportModuleMethodName)
+		{
+			if (arguments.Count != 1 || arguments.First().Expression is not TypeOfExpressionSyntax typeOfExpression)
+			{
+				ReportIllegalStatementDiagnostic(generationContext, identifierName);
+				return;
+			}
+
+			ImportModule(generationContext, typeOfExpression.Type);
+			return;
+		}
 
 		Lifetime? lifetime = identifier switch
 		{
@@ -230,14 +415,6 @@ public partial class ServiceProviderGenerator
 			ReportIllegalStatementDiagnostic(generationContext, identifierName);
 			return;
 		}
-
-		if (identifierName.Parent is not InvocationExpressionSyntax invocation)
-		{
-			ReportIllegalStatementDiagnostic(generationContext, identifierName);
-			return;
-		}
-
-		SeparatedSyntaxList<ArgumentSyntax> arguments = invocation.ArgumentList.Arguments;
 
 		if (arguments.Count is not (1 or 2))
 		{
@@ -298,14 +475,6 @@ public partial class ServiceProviderGenerator
 
 		if (firstArgument is LambdaExpressionSyntax lambda)
 		{
-			if (lambda is SimpleLambdaExpressionSyntax s)
-			{
-				SemanticModel semanticModel = generationContext.Compilation.GetSemanticModel(lambda.SyntaxTree);
-				SymbolInfo symbolInfo = semanticModel.GetSymbolInfo(s.Parameter);
-
-
-			}
-
 			if (HandleFunc(lambda, lifetime.Value, generationContext, memberAccessContext))
 			{
 				return;
@@ -319,14 +488,13 @@ public partial class ServiceProviderGenerator
 				return;
 			}
 		}
-		
+
 		ReportIllegalStatementDiagnostic(generationContext, identifierName);
 
 		INamedTypeSymbol? GetSymbol(TypeSyntax typeSyntax)
 		{
-			TypeInfo typeInfo = generationContext.Compilation
-				.GetSemanticModel(typeSyntax.SyntaxTree)
-				.GetTypeInfo(typeSyntax);
+			TypeInfo typeInfo = ModelExtensions.GetTypeInfo(generationContext.Compilation
+					.GetSemanticModel(typeSyntax.SyntaxTree), typeSyntax);
 
 			return typeInfo.Type as INamedTypeSymbol;
 		}
@@ -353,12 +521,12 @@ public partial class ServiceProviderGenerator
 		{
 			return HandleFuncPropertyOrField(syntaxNode, propertyType, lifetime, generationContext, memberAccessContext);
 		}
-		
+
 		if (symbol is IFieldSymbol { Type: INamedTypeSymbol fieldType })
 		{
 			return HandleFuncPropertyOrField(syntaxNode, fieldType, lifetime, generationContext, memberAccessContext);
 		}
-		
+
 		return false;
 	}
 
@@ -386,7 +554,12 @@ public partial class ServiceProviderGenerator
 
 		IParameterSymbol parameter = methodSymbol.Parameters[0];
 
-		if (!parameter.Type.SymbolEquals(generationContext.KnownTypes.IServiceProvider))
+		bool isServiceProvider = parameter.Type.SymbolEquals(generationContext.KnownTypes.IServiceProvider);
+		bool isErrorType = parameter.Type is IErrorTypeSymbol;
+
+		// Roslyn doesn't fill the parameter type if generic argument is not specified on call site.
+		// Assume that it is the correct type.
+		if (!(isServiceProvider || isErrorType))
 		{
 			return false;
 		}
@@ -483,10 +656,10 @@ public partial class ServiceProviderGenerator
 	private class MemberAccessContext
 	{
 		private List<INamedTypeSymbol>? _alsoRegisterAs;
-		
+
 		public IReadOnlyList<INamedTypeSymbol>? AlsoRegisterAs => _alsoRegisterAs;
 		public bool RegisterAsSelf { get; set; }
-		
+
 		public void AddAlsoRegisterAs(INamedTypeSymbol type)
 		{
 			_alsoRegisterAs ??= new List<INamedTypeSymbol>();

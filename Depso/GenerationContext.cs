@@ -53,6 +53,7 @@ public class GenerationContext
 
 	public HashSet<ITypeSymbol> GetServicesProcessedTypes { get; }
 
+	public bool IsModule { get; }
 	public bool IsScopeClass { get; set; }
 	public bool AddNewLine { get; set; }
 
@@ -62,7 +63,8 @@ public class GenerationContext
 		KnownTypes knownTypes,
 		ClassDeclarationSyntax classSyntax,
 		INamedTypeSymbol classSymbol,
-		IMethodSymbol registerServicesMethod)
+		IMethodSymbol registerServicesMethod,
+		bool isModule)
 	{
 		SourceProductionContext = sourceProductionContext;
 		Compilation = compilation;
@@ -70,6 +72,7 @@ public class GenerationContext
 		ClassSyntax = classSyntax;
 		ClassSymbol = classSymbol;
 		RegisterServicesMethod = registerServicesMethod;
+		IsModule = isModule;
 
 		IndexManager = new IndexManager();
 		CodeBuilder = new CodeBuilder();
@@ -145,14 +148,17 @@ public class GenerationContext
 		return serviceDescriptor;
 	}
 	
-	public string GetFactoryInvocation(SyntaxNode factory)
+	public string GetFactoryInvocation(
+		SyntaxNode factory,
+		string serviceProviderParameter,
+		bool replaceServiceProviderToThis)
 	{
-		FactoryRewriter rewriter = new(Compilation, IsScopeClass);
+		FactoryRewriter rewriter = new(Compilation, IsScopeClass, replaceServiceProviderToThis);
 		factory = rewriter.Visit(factory)!;
 
 		if (factory is not AnonymousFunctionExpressionSyntax anonymousFunction)
 		{
-			return $"return {factory}(this);";
+			return $"return {factory}({serviceProviderParameter});";
 		}
 		
 		if (anonymousFunction.Block != null)
