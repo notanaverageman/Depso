@@ -20,6 +20,6 @@ public class ServiceProviderAttributeInfo : AttributeInfo
 			    {
 			    }
 			}
-			""".Trim();
+			""";
 	}
 }
