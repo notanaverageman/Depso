@@ -1,4 +1,7 @@
 ﻿using Depso;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace Test.Nested;
 
 public interface SingletonInterface1 { }
 public interface SingletonInterface2 { }
@@ -26,7 +29,7 @@ public class Scoped2 : ScopedInterface2, ScopedInterface1 { }
 public class Scoped3 : ScopedInterface3 { }
 public class Scoped4 : ScopedInterface4 { }
 public class Scoped5 : ScopedInterface5 { }
-public class Scoped6 : ScopedInterface6 { }
+public record Scoped6(ScopedInterface5 _) : ScopedInterface6 { }
 
 public interface TransientInterface1 { }
 public interface TransientInterface2 { }
@@ -53,7 +56,7 @@ public partial class Module
 
         AddSingleton<SingletonInterface4, Singleton4>().AlsoAsSelf();
         AddSingleton(typeof(SingletonInterface5), typeof(Singleton5));
-        AddSingleton<SingletonInterface6>(x => new Singleton6((SingletonInterface5)x.GetService(typeof(ScopedInterface5))!));
+        AddSingleton<SingletonInterface6>(x => new Singleton6((SingletonInterface5)x.GetService(typeof(SingletonInterface5))!));
         
         AddScoped<Scoped1>().AlsoAs<ScopedInterface1>();
         AddScoped(typeof(Scoped2)).AlsoAs(typeof(ScopedInterface2)).AlsoAs<ScopedInterface1>();
@@ -61,7 +64,11 @@ public partial class Module
 
         AddScoped<ScopedInterface4, Scoped4>().AlsoAsSelf();
         AddScoped(typeof(ScopedInterface5), typeof(Scoped5));
-        AddScoped<ScopedInterface6>(_ => new Scoped6());
+        AddScoped<ScopedInterface6>(x =>
+        {
+            ScopedInterface5 scopedInterface5 = x.GetRequiredService<ScopedInterface5>();
+            return new Scoped6(scopedInterface5);
+        });
         
         AddTransient<Transient1>().AlsoAs<TransientInterface1>();
         AddTransient(typeof(Transient2)).AlsoAs(typeof(TransientInterface2)).AlsoAs<TransientInterface1>();

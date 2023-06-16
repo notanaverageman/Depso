@@ -1,4 +1,5 @@
 ﻿using Depso;
+using Test.Nested;
 
 [ServiceProvider]
 public partial class Provider

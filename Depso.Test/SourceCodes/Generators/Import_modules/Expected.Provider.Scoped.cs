@@ -8,24 +8,25 @@ public partial class Provider
         :
         global::System.IDisposable,
         global::System.IAsyncDisposable,
-        global::System.IServiceProvider
+        global::System.IServiceProvider,
+        global::Microsoft.Extensions.DependencyInjection.IServiceScope
     {
         private readonly object _sync = new object();
         private readonly global::Provider _root;
 
         private bool _isDisposed;
 
-        private global::Scoped1? _scoped1_0;
-        private global::Scoped1 Scoped1_0 => _scoped1_0 ??= CreateScoped1();
+        private global::Test.Nested.Scoped1? _scoped1_0;
+        private global::Test.Nested.Scoped1 Scoped1_0 => _scoped1_0 ??= CreateScoped1();
 
-        private global::Scoped2? _scoped2_0;
-        private global::Scoped2 Scoped2_0 => _scoped2_0 ??= CreateScoped2();
+        private global::Test.Nested.Scoped2? _scoped2_0;
+        private global::Test.Nested.Scoped2 Scoped2_0 => _scoped2_0 ??= CreateScoped2();
 
-        private global::Scoped4? _scoped4_0;
-        private global::Scoped4 Scoped4_0 => _scoped4_0 ??= CreateScoped4();
+        private global::Test.Nested.Scoped4? _scoped4_0;
+        private global::Test.Nested.Scoped4 Scoped4_0 => _scoped4_0 ??= CreateScoped4();
 
-        private global::Scoped5? _scoped5_0;
-        private global::Scoped5 Scoped5_0 => _scoped5_0 ??= CreateScoped5();
+        private global::Test.Nested.Scoped5? _scoped5_0;
+        private global::Test.Nested.Scoped5 Scoped5_0 => _scoped5_0 ??= CreateScoped5();
 
         private global::ExternalScoped1? _externalScoped1_0;
         private global::ExternalScoped1 ExternalScoped1_0 => _externalScoped1_0 ??= CreateExternalScoped1();
@@ -39,17 +40,19 @@ public partial class Provider
         private global::ExternalScoped5? _externalScoped5_0;
         private global::ExternalScoped5 ExternalScoped5_0 => _externalScoped5_0 ??= CreateExternalScoped5();
 
-        private global::Scoped3? _scoped3_0;
-        private global::Scoped3 Scoped3_0 => _scoped3_0 ??= FactoryScoped3_0();
+        private global::Test.Nested.Scoped3? _scoped3_0;
+        private global::Test.Nested.Scoped3 Scoped3_0 => _scoped3_0 ??= FactoryScoped3_0();
 
-        private global::Scoped6? _scoped6_0;
-        private global::Scoped6 Scoped6_0 => _scoped6_0 ??= FactoryScoped6_0();
+        private global::Test.Nested.ScopedInterface6? _scopedInterface6_0;
+        private global::Test.Nested.ScopedInterface6 ScopedInterface6_0 => _scopedInterface6_0 ??= FactoryScopedInterface6_0();
 
         private global::ExternalScoped3? _externalScoped3_0;
         private global::ExternalScoped3 ExternalScoped3_0 => _externalScoped3_0 ??= FactoryExternalScoped3_0();
 
         private global::ExternalScopedInterface6? _externalScopedInterface6_0;
         private global::ExternalScopedInterface6 ExternalScopedInterface6_0 => _externalScopedInterface6_0 ??= FactoryExternalScopedInterface6_0();
+
+        global::System.IServiceProvider global::Microsoft.Extensions.DependencyInjection.IServiceScope.ServiceProvider => this;
 
         public Scope(global::Provider root, object? sync)
         {
@@ -63,15 +66,15 @@ public partial class Provider
 
         public object? GetService(global::System.Type serviceType)
         {
-            if (serviceType == typeof(global::Singleton1)) return _root.GetService(serviceType);
-            if (serviceType == typeof(global::SingletonInterface1)) return _root.GetService(serviceType);
-            if (serviceType == typeof(global::Singleton2)) return _root.GetService(serviceType);
-            if (serviceType == typeof(global::SingletonInterface2)) return _root.GetService(serviceType);
-            if (serviceType == typeof(global::Singleton3)) return _root.GetService(serviceType);
-            if (serviceType == typeof(global::SingletonInterface4)) return _root.GetService(serviceType);
-            if (serviceType == typeof(global::Singleton4)) return _root.GetService(serviceType);
-            if (serviceType == typeof(global::SingletonInterface5)) return _root.GetService(serviceType);
-            if (serviceType == typeof(global::Singleton6)) return _root.GetService(serviceType);
+            if (serviceType == typeof(global::Test.Nested.Singleton1)) return _root.GetService(serviceType);
+            if (serviceType == typeof(global::Test.Nested.SingletonInterface1)) return _root.GetService(serviceType);
+            if (serviceType == typeof(global::Test.Nested.Singleton2)) return _root.GetService(serviceType);
+            if (serviceType == typeof(global::Test.Nested.SingletonInterface2)) return _root.GetService(serviceType);
+            if (serviceType == typeof(global::Test.Nested.Singleton3)) return _root.GetService(serviceType);
+            if (serviceType == typeof(global::Test.Nested.SingletonInterface4)) return _root.GetService(serviceType);
+            if (serviceType == typeof(global::Test.Nested.Singleton4)) return _root.GetService(serviceType);
+            if (serviceType == typeof(global::Test.Nested.SingletonInterface5)) return _root.GetService(serviceType);
+            if (serviceType == typeof(global::Test.Nested.SingletonInterface6)) return _root.GetService(serviceType);
             if (serviceType == typeof(global::ExternalSingleton1)) return _root.GetService(serviceType);
             if (serviceType == typeof(global::ExternalSingletonInterface1)) return _root.GetService(serviceType);
             if (serviceType == typeof(global::ExternalSingleton2)) return _root.GetService(serviceType);
@@ -81,15 +84,15 @@ public partial class Provider
             if (serviceType == typeof(global::ExternalSingleton4)) return _root.GetService(serviceType);
             if (serviceType == typeof(global::ExternalSingletonInterface5)) return _root.GetService(serviceType);
             if (serviceType == typeof(global::ExternalSingletonInterface6)) return _root.GetService(serviceType);
-            if (serviceType == typeof(global::Scoped1)) return Scoped1_0;
-            if (serviceType == typeof(global::ScopedInterface1)) return Scoped2_0;
-            if (serviceType == typeof(global::Scoped2)) return Scoped2_0;
-            if (serviceType == typeof(global::ScopedInterface2)) return Scoped2_0;
-            if (serviceType == typeof(global::Scoped3)) return Scoped3_0;
-            if (serviceType == typeof(global::ScopedInterface4)) return Scoped4_0;
-            if (serviceType == typeof(global::Scoped4)) return Scoped4_0;
-            if (serviceType == typeof(global::ScopedInterface5)) return Scoped5_0;
-            if (serviceType == typeof(global::Scoped6)) return Scoped6_0;
+            if (serviceType == typeof(global::Test.Nested.Scoped1)) return Scoped1_0;
+            if (serviceType == typeof(global::Test.Nested.ScopedInterface1)) return Scoped2_0;
+            if (serviceType == typeof(global::Test.Nested.Scoped2)) return Scoped2_0;
+            if (serviceType == typeof(global::Test.Nested.ScopedInterface2)) return Scoped2_0;
+            if (serviceType == typeof(global::Test.Nested.Scoped3)) return Scoped3_0;
+            if (serviceType == typeof(global::Test.Nested.ScopedInterface4)) return Scoped4_0;
+            if (serviceType == typeof(global::Test.Nested.Scoped4)) return Scoped4_0;
+            if (serviceType == typeof(global::Test.Nested.ScopedInterface5)) return Scoped5_0;
+            if (serviceType == typeof(global::Test.Nested.ScopedInterface6)) return ScopedInterface6_0;
             if (serviceType == typeof(global::ExternalScoped1)) return ExternalScoped1_0;
             if (serviceType == typeof(global::ExternalScopedInterface1)) return ExternalScoped2_0;
             if (serviceType == typeof(global::ExternalScoped2)) return ExternalScoped2_0;
@@ -99,15 +102,15 @@ public partial class Provider
             if (serviceType == typeof(global::ExternalScoped4)) return ExternalScoped4_0;
             if (serviceType == typeof(global::ExternalScopedInterface5)) return ExternalScoped5_0;
             if (serviceType == typeof(global::ExternalScopedInterface6)) return ExternalScopedInterface6_0;
-            if (serviceType == typeof(global::Transient1)) return _root.CreateTransient1();
-            if (serviceType == typeof(global::TransientInterface1)) return _root.CreateTransient2();
-            if (serviceType == typeof(global::Transient2)) return _root.CreateTransient2();
-            if (serviceType == typeof(global::TransientInterface2)) return _root.CreateTransient2();
-            if (serviceType == typeof(global::Transient3)) return _root.FactoryTransient3_0();
-            if (serviceType == typeof(global::TransientInterface4)) return _root.CreateTransient4();
-            if (serviceType == typeof(global::Transient4)) return _root.CreateTransient4();
-            if (serviceType == typeof(global::TransientInterface5)) return _root.CreateTransient5();
-            if (serviceType == typeof(global::Transient6)) return _root.FactoryTransient6_0();
+            if (serviceType == typeof(global::Test.Nested.Transient1)) return _root.CreateTransient1();
+            if (serviceType == typeof(global::Test.Nested.TransientInterface1)) return _root.CreateTransient2();
+            if (serviceType == typeof(global::Test.Nested.Transient2)) return _root.CreateTransient2();
+            if (serviceType == typeof(global::Test.Nested.TransientInterface2)) return _root.CreateTransient2();
+            if (serviceType == typeof(global::Test.Nested.Transient3)) return _root.FactoryTransient3_0();
+            if (serviceType == typeof(global::Test.Nested.TransientInterface4)) return _root.CreateTransient4();
+            if (serviceType == typeof(global::Test.Nested.Transient4)) return _root.CreateTransient4();
+            if (serviceType == typeof(global::Test.Nested.TransientInterface5)) return _root.CreateTransient5();
+            if (serviceType == typeof(global::Test.Nested.TransientInterface6)) return _root.FactoryTransientInterface6_0();
             if (serviceType == typeof(global::ExternalTransient1)) return _root.CreateExternalTransient1();
             if (serviceType == typeof(global::ExternalTransientInterface1)) return _root.CreateExternalTransient2();
             if (serviceType == typeof(global::ExternalTransient2)) return _root.CreateExternalTransient2();
@@ -126,57 +129,59 @@ public partial class Provider
             return (T)GetService(typeof(T))!;
         }
 
-        private global::Scoped1 CreateScoped1()
+        private global::Test.Nested.Scoped1 CreateScoped1()
         {
             lock (_sync)
             {
                 ThrowIfDisposed();
-                return new global::Scoped1();
+                return new global::Test.Nested.Scoped1();
             }
         }
 
-        private global::Scoped2 CreateScoped2()
+        private global::Test.Nested.Scoped2 CreateScoped2()
         {
             lock (_sync)
             {
                 ThrowIfDisposed();
-                return new global::Scoped2();
+                return new global::Test.Nested.Scoped2();
             }
         }
 
-        private global::Scoped3 FactoryScoped3_0()
+        private global::Test.Nested.Scoped3 FactoryScoped3_0()
         {
             lock (_sync)
             {
                 ThrowIfDisposed();
-                return new global::Scoped3();
+                return new global::Test.Nested.Scoped3();
             }
         }
 
-        private global::Scoped4 CreateScoped4()
+        private global::Test.Nested.Scoped4 CreateScoped4()
         {
             lock (_sync)
             {
                 ThrowIfDisposed();
-                return new global::Scoped4();
+                return new global::Test.Nested.Scoped4();
             }
         }
 
-        private global::Scoped5 CreateScoped5()
+        private global::Test.Nested.Scoped5 CreateScoped5()
         {
             lock (_sync)
             {
                 ThrowIfDisposed();
-                return new global::Scoped5();
+                return new global::Test.Nested.Scoped5();
             }
         }
 
-        private global::Scoped6 FactoryScoped6_0()
+        private global::Test.Nested.ScopedInterface6 FactoryScopedInterface6_0()
         {
             lock (_sync)
             {
                 ThrowIfDisposed();
-                return new global::Scoped6();
+
+                global::Test.Nested.ScopedInterface5 scopedInterface5 = global::Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<global::Test.Nested.ScopedInterface5>(this);
+                return new global::Test.Nested.Scoped6(scopedInterface5);
             }
         }
 
