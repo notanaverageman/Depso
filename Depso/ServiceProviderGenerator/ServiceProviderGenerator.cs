@@ -188,15 +188,18 @@ public partial class ServiceProviderGenerator : IIncrementalGenerator
 		}
 		
 		string classSource = ProcessClass(generationContext);
-		string scopeClassSource = ProcessScopeClass(generationContext);
+		string? scopeClassSource = ProcessScopeClass(generationContext);
 
 		context.AddSource(
 			$"{Constants.GeneratorNamespace}.{classSymbol.ToDisplayString()}.g.cs",
 			classSource);
 
+		if (scopeClassSource != null)
+		{
 		context.AddSource(
 			$"{Constants.GeneratorNamespace}.{classSymbol.ToDisplayString()}.Scoped.g.cs",
 			scopeClassSource);
+	}
 	}
 
 	private static string ProcessClass(GenerationContext generationContext)
@@ -292,8 +295,13 @@ public partial class ServiceProviderGenerator : IIncrementalGenerator
 		return codeBuilder.ToString();
 	}
 
-	private static string ProcessScopeClass(GenerationContext generationContext)
+	private static string? ProcessScopeClass(GenerationContext generationContext)
 	{
+		if(generationContext.IsModule)
+	{
+			return null;
+		}
+
 		generationContext.Reset();
 
 		CodeBuilder codeBuilder = generationContext.CodeBuilder;
