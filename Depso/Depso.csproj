@@ -14,6 +14,10 @@
     <PackageReference Include="QuickGraph.NETStandard" Version="3.8.0" GeneratePathProperty="true" PrivateAssets="all" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <GetTargetPathDependsOn>$(GetTargetPathDependsOn);GetDependencyTargetPaths</GetTargetPathDependsOn>
+  </PropertyGroup>
+
   <Target Name="GetDependencyTargetPaths">
     <ItemGroup>
       <TargetPathWithTargetPlatformMoniker Include="$(PKGQuickGraph_NETStandard)\lib\netstandard2.0\QuickGraph.NETStandard.dll" IncludeRuntimeDependency="false" />
