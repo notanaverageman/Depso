@@ -121,8 +121,7 @@ public abstract class CreateMethodsGenerator : IGenerator
 		{
 			string factoryInvocation = generationContext.GetFactoryInvocation(
 				serviceDescriptor.Factory!,
-				serviceProviderParameter: "this",
-				replaceServiceProviderToThis: true);
+				serviceProviderParameter: "this");
 
 			using (codeBuilder.Lock(Constants.LockFieldName))
 			{

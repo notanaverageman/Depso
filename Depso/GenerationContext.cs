@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -148,13 +149,10 @@ public class GenerationContext
 		return serviceDescriptor;
 	}
 	
-	public string GetFactoryInvocation(
-		SyntaxNode factory,
-		string serviceProviderParameter,
-		bool replaceServiceProviderToThis)
+	public string GetFactoryInvocation(SyntaxNode factory, string serviceProviderParameter)
 	{
-		FactoryRewriter rewriter = new(Compilation, IsScopeClass, replaceServiceProviderToThis);
-		factory = rewriter.Visit(factory)!;
+		FactoryRewriter rewriter = new(this);
+		factory = rewriter.Visit(factory);
 
 		if (factory is not AnonymousFunctionExpressionSyntax anonymousFunction)
 		{
@@ -213,21 +211,24 @@ public class GenerationContext
 				_dependencyGraph.AddNode(typeSymbol, Array.Empty<INamedTypeSymbol>());
 				continue;
 			}
+			
+			ConstructorSelectionResult selectionResult = SelectConstructor(typeSymbol);
 
-			// TODO: Check that this symbol is a concrete type.
-
-			IMethodSymbol? constructor = SelectConstructor(typeSymbol);
-
-			if (constructor == null)
+			// Don't report diagnostics on modules. Modules may not have all the necessary
+			// services registered yet.
+			if (selectionResult.Error != ConstructorSelectionError.None && !IsModule)
 			{
-				// TODO: Diagnostic
-				throw new ArgumentException("Constructor null!");
+				selectionResult.ReportDiagnostic(typeSymbol);
+				continue;
 			}
+
+			ImmutableArray<IParameterSymbol> constructorParameters =
+				selectionResult.SelectedConstructor?.Parameters ?? ImmutableArray<IParameterSymbol>.Empty;
 
 			List<ITypeSymbol> parameters = new();
 			List<INamedTypeSymbol> concreteDependencies = new();
 
-			foreach (IParameterSymbol parameter in constructor.Parameters)
+			foreach (IParameterSymbol parameter in constructorParameters)
 			{
 				bool typeIsRegistered = _serviceDescriptorCache.TryGet(
 					parameter.Type,
@@ -276,27 +277,43 @@ public class GenerationContext
 		}
 	}
 
-	private IMethodSymbol? SelectConstructor(INamedTypeSymbol symbol)
+	private ConstructorSelectionResult SelectConstructor(INamedTypeSymbol symbol)
 	{
-		IMethodSymbol? bestCandidate = null;
+		ConstructorSelectionResult result = new(this);
 
+		// No need to search for a constructor on non constructible types.
+		if (symbol.IsAbstract || symbol.IsStatic || symbol.TypeKind == TypeKind.Interface)
+		{
+			result.SetError(ConstructorSelectionError.NotConstructible);
+			return result;
+		}
+		
 		foreach (IMethodSymbol constructor in symbol.Constructors)
 		{
-			// TODO: It can be internal if the constructor is accessible from this assembly.
 			if (constructor.DeclaredAccessibility != Accessibility.Public)
 			{
+				// This is an error only if there is no selected constructor yet.
+				if (result.SelectedConstructor == null)
+				{
+					// Setting the error here will not override the error if its value is greater
+					// than this error, e.g. missing parameters.
+					result.SetError(ConstructorSelectionError.NoPublicConstructor);
+				}
+
 				continue;
 			}
 
 			int parameterCount = constructor.Parameters.Length;
-			int bestParameterCount = bestCandidate?.Parameters.Length ?? -1;
+			int selectedParameterCount = result.SelectedConstructor?.Parameters.Length ?? -1;
 
-			if (parameterCount < bestParameterCount)
+			// If the selected constructor has more parameters than this one, we can ignore current
+			// constructor.
+			if (parameterCount < selectedParameterCount)
 			{
 				continue;
 			}
 
-			bool canUse = true;
+			bool currentConstructorHasMissingParameters = false;
 
 			foreach (IParameterSymbol parameter in constructor.Parameters)
 			{
@@ -306,23 +323,47 @@ public class GenerationContext
 				{
 					continue;
 				}
-
-				canUse = false;
-				break;
+				
+				// This constructor is better than the currently selected one, if there is one,
+				// but misses some parameters. In this case we may report a warning.
+				// Otherwise, if there is no selected constructor, missing parameters will be
+				// reported as an error.
+				result.AddMissingParameter(parameter);
+				currentConstructorHasMissingParameters = true;
 			}
 
-			if (canUse && bestParameterCount == parameterCount)
+			if (currentConstructorHasMissingParameters)
 			{
-				// TODO: Report ambiguous match.
+				// This constructor was the best candidate so far, but it misses some parameters.
+				result.SetBestCandidateMissingParameters(constructor);
+
+				// This is an error only if there is no selected constructor.
+				if (result.SelectedConstructor == null)
+				{
+					result.SetError(ConstructorSelectionError.MissingParameters);
+				}
+
+				continue;
 			}
 
-			if (canUse)
+			if (selectedParameterCount == parameterCount)
 			{
-				bestCandidate = constructor;
+				// There are more than one constructors that can be satisfied with the same parameter
+				// count.
+				result.AddAmibiguousConstructor(constructor);
+				result.AddAmibiguousConstructor(result.SelectedConstructor!);
+				
+				result.SetError(ConstructorSelectionError.AmbiguousMatch);
+
+				continue;
 			}
+
+			// This is the current best constructor.
+			result.SetError(ConstructorSelectionError.None);
+			result.SetSelectedConstructor(constructor);
 		}
 
-		return bestCandidate;
+		return result;
 	}
 
 	public IEnumerable<ServiceDescriptor> GetDependencySortedDescriptors()
@@ -383,5 +424,111 @@ public class GenerationContext
 		IndexManager.Clear();
 		IsScopeClass = true;
 		AddNewLine = false;
+	}
+
+	private class ConstructorSelectionResult
+	{
+		private readonly GenerationContext _generationContext;
+
+		private List<IMethodSymbol>? _ambiguousConstructors;
+		private List<IParameterSymbol>? _missingParameters;
+
+		public ConstructorSelectionError Error { get; private set; }
+		public IMethodSymbol? SelectedConstructor { get; private set; }
+
+		private IMethodSymbol? BestCandidateMissingParameters { get; set; }
+
+		private IReadOnlyList<IMethodSymbol> AmbiguousConstructors =>
+			_ambiguousConstructors ?? (IReadOnlyList<IMethodSymbol>)Array.Empty<IMethodSymbol>();
+
+		private IReadOnlyList<IParameterSymbol> MissingParameters =>
+			_missingParameters ?? (IReadOnlyList<IParameterSymbol>)Array.Empty<IParameterSymbol>();
+
+		public ConstructorSelectionResult(GenerationContext generationContext)
+		{
+			_generationContext = generationContext;
+		}
+		
+		public void SetError(ConstructorSelectionError error)
+		{
+			if (error == ConstructorSelectionError.None)
+			{
+				Error = ConstructorSelectionError.None;
+				_missingParameters = null;
+				_ambiguousConstructors = null;
+
+				return;
+			}
+
+			if (error > Error)
+			{
+				Error = error;
+			}
+		}
+
+		public void AddAmibiguousConstructor(IMethodSymbol constructor)
+		{
+			_ambiguousConstructors ??= new List<IMethodSymbol>();
+			_ambiguousConstructors.Add(constructor);
+		}
+
+		public void AddMissingParameter(IParameterSymbol parameter)
+		{
+			_missingParameters ??= new List<IParameterSymbol>();
+			_missingParameters.Add(parameter);
+		}
+
+		public void SetSelectedConstructor(IMethodSymbol? constructor)
+		{
+			SelectedConstructor = constructor;
+		}
+
+		public void SetBestCandidateMissingParameters(IMethodSymbol? constructor)
+		{
+			BestCandidateMissingParameters = constructor;
+		}
+
+		public void ReportDiagnostic(INamedTypeSymbol symbol)
+		{
+			Location? location =
+				(symbol.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax() as ClassDeclarationSyntax)?.Identifier.GetLocation();
+
+			Diagnostic diagnostic = Error switch
+			{
+				ConstructorSelectionError.NotConstructible =>
+					Diagnostic.Create(Diagnostics.ClassNotConstructible, location),
+				ConstructorSelectionError.NoPublicConstructor =>
+					Diagnostic.Create(Diagnostics.NoPublicConstructors, location),
+				ConstructorSelectionError.MissingParameters =>
+					Diagnostic.Create(
+						Diagnostics.MissingDependencies,
+						(BestCandidateMissingParameters?.DeclaringSyntaxReferences
+							.FirstOrDefault()
+							?.GetSyntax() as ConstructorDeclarationSyntax)
+							?.Identifier
+							.GetLocation(),
+						string.Join(", ", MissingParameters.Select(x => x.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat)))),
+				ConstructorSelectionError.AmbiguousMatch =>
+					Diagnostic.Create(
+						Diagnostics.AmbiguousConstructors,
+						(AmbiguousConstructors.First().DeclaringSyntaxReferences
+							.FirstOrDefault()
+							?.GetSyntax() as ConstructorDeclarationSyntax)
+						?.Identifier
+						.GetLocation(),
+						string.Join(", ", AmbiguousConstructors.Select(x => x.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat)))),
+				_ => throw new ArgumentOutOfRangeException(nameof(Error)),
+			};
+			_generationContext.SourceProductionContext.ReportDiagnostic(diagnostic);
+		}
+	}
+
+	private enum ConstructorSelectionError
+	{
+		None,
+		NoPublicConstructor,
+		MissingParameters,
+		AmbiguousMatch,
+		NotConstructible
 	}
 }

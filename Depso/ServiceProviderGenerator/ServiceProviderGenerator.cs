@@ -435,8 +435,7 @@ public partial class ServiceProviderGenerator : IIncrementalGenerator
 			string factoryMethodName = serviceDescriptor.GetFactoryMethodName();
 			string factoryInvocation = generationContext.GetFactoryInvocation(
 				factory,
-				serviceProviderParameter,
-				replaceServiceProviderToThis: false);
+				serviceProviderParameter);
 
 			INamedTypeSymbol serviceType = serviceDescriptor.ServiceType;
 
@@ -452,7 +451,12 @@ public partial class ServiceProviderGenerator : IIncrementalGenerator
 					generationContext.KnownTypes.IServiceProvider.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
 					serviceProviderParameter);
 
-				codeBuilder.AppendLine(factoryInvocation);
+				using System.IO.StringReader reader = new(factoryInvocation);
+
+				while (reader.ReadLine() is { } line)
+				{
+					codeBuilder.AppendLine(line.TrimStart());
+				}
 			}
 
 			generationContext.AddNewLine = true;

@@ -1,41 +1,29 @@
-﻿using System;
-using System.Collections.Generic;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Operations;
+using System.Collections.Generic;
+using System.Linq;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Depso;
 
 public class FactoryRewriter : CSharpSyntaxRewriter
 {
-	private readonly Compilation _compilation;
-	private readonly bool _isScopeClass;
-	private readonly bool _replaceServiceProviderToThis;
-
+	private readonly GenerationContext _generationContext;
 	private HashSet<SyntaxNode>? _nodesToReplace;
 
-	public FactoryRewriter(Compilation compilation, bool isScopeClass, bool replaceServiceProviderToThis)
-	{
-		_compilation = compilation;
-		_isScopeClass = isScopeClass;
-		_replaceServiceProviderToThis = replaceServiceProviderToThis;
-	}
+	private Compilation Compilation => _generationContext.Compilation;
 
-	public override SyntaxNode? Visit(SyntaxNode? node)
+	public FactoryRewriter(GenerationContext generationContext)
 	{
-		if (ReplaceNode(node, out SyntaxNode? replacement))
-		{
-			return replacement;
-		}
-
-		return base.Visit(node);
+		_generationContext = generationContext;
 	}
 
 	public override SyntaxNode? VisitSimpleLambdaExpression(SimpleLambdaExpressionSyntax node)
 	{
-		SemanticModel semanticModel = _compilation.GetSemanticModel(node.SyntaxTree);
+		// We need the symbol to find the parameter and replace all references to it in the body.
+		SemanticModel semanticModel = Compilation.GetSemanticModel(node.SyntaxTree);
 		ISymbol? symbol = semanticModel.GetDeclaredSymbol(node.Parameter);
 
 		if (symbol == null)
@@ -48,135 +36,205 @@ public class FactoryRewriter : CSharpSyntaxRewriter
 
 		parameterReferenceFinder.Visit(operation);
 
+		// No references to the parameter in the body.
 		if (parameterReferenceFinder.ReferenceNodes == null)
 		{
 			return base.VisitSimpleLambdaExpression(node);
 		}
 
+		// Found the references. Replace them in subnodes.
 		_nodesToReplace = parameterReferenceFinder.ReferenceNodes;
+		SyntaxNode? visitedExpression = base.VisitSimpleLambdaExpression(node);
+		
+		// Reset the reference for next visit.
+		_nodesToReplace = null;
 
-		return base.VisitSimpleLambdaExpression(node);
+		return visitedExpression;
 	}
+
+	public override SyntaxNode? VisitInvocationExpression(InvocationExpressionSyntax node)
+	{
+		// Replace extension methods with static method calls.
+		if (node.Expression is not MemberAccessExpressionSyntax memberAccess)
+		{
+			return base.VisitInvocationExpression(node);
+		}
+
+		if (!Compilation.ContainsSyntaxTree(node.SyntaxTree))
+		{
+			return base.VisitInvocationExpression(node);
+		}
+
+		ISymbol? symbol = GetSymbol(node);
+
+		if (symbol is not IMethodSymbol methodSymbol)
+		{
+			return base.VisitInvocationExpression(node);
+		}
+
+		if (!methodSymbol.IsExtensionMethod)
+		{
+			return base.VisitInvocationExpression(node);
+		}
+		
+		ExpressionSyntax expression = (ExpressionSyntax)Visit(memberAccess.Expression);
+		ArgumentSyntax[] arguments = node.ArgumentList.Arguments
+			.Select(VisitArgument)
+			.Cast<ArgumentSyntax>()
+			.ToArray();
+
+		ArgumentListSyntax newArguments = ArgumentList();
+		newArguments = newArguments.AddArguments(Argument(expression));
+		newArguments = newArguments.AddArguments(arguments);
+
+		NameSyntax typeName = ParseName(methodSymbol.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+		SimpleNameSyntax methodName = (SimpleNameSyntax)Visit(memberAccess.Name);
+
+		MemberAccessExpressionSyntax newMemberAccessExpression = MemberAccessExpression(
+			SyntaxKind.SimpleMemberAccessExpression,
+			typeName,
+			methodName);
+		
+		return node
+			.WithExpression(newMemberAccessExpression)
+			.WithArgumentList(newArguments);
+	}
+
 	public override SyntaxNode? VisitQualifiedName(QualifiedNameSyntax node)
 	{
-		return ProcessNode(node, base.VisitQualifiedName);
+		if (GetSymbol(node) is not INamedTypeSymbol namedTypeSymbol)
+		{
+			return base.VisitQualifiedName(node);
+		}
+
+		return ParseName(namedTypeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
 	}
 
 	public override SyntaxNode? VisitIdentifierName(IdentifierNameSyntax node)
 	{
-		return ProcessNode(node, base.VisitIdentifierName);
+		ISymbol? symbol = GetSymbol(node);
+
+		if (symbol is INamedTypeSymbol namedTypeSymbol)
+		{
+			return IdentifierName(namedTypeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)).WithTriviaFrom(node);
+		}
+
+		if (symbol is IFieldSymbol or IPropertySymbol or IMethodSymbol)
+		{
+			if (symbol.IsStatic)
+			{
+				string containingType = symbol.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+
+				return MemberAccessExpression(
+					SyntaxKind.SimpleMemberAccessExpression,
+					IdentifierName(containingType),
+					node);
+			}
+
+			if (_generationContext is { IsModule: false, IsScopeClass: true })
+			{
+				return MemberAccessExpression(
+					SyntaxKind.SimpleMemberAccessExpression,
+					IdentifierName("_root"),
+					node);
+			}
+		}
+
+		if (!_generationContext.IsModule && _nodesToReplace?.Contains(node) == true)
+		{
+			return ThisExpression();
+		}
+
+		return base.VisitIdentifierName(node);
+
 	}
 
 	public override SyntaxNode? VisitGenericName(GenericNameSyntax node)
 	{
-		return ProcessNode(node, base.VisitGenericName);
+		if (GetSymbol(node) is not INamedTypeSymbol namedTypeSymbol)
+		{
+			return base.VisitGenericName(node);
+		}
+
+		SeparatedSyntaxList<TypeSyntax> typeArguments = node.TypeArgumentList.Arguments;
+
+		if (typeArguments.Count > 0)
+		{
+			TypeSyntax[] newTypeArguments = new TypeSyntax[typeArguments.Count];
+
+			for (int i = 0; i < typeArguments.Count; i++)
+			{
+				TypeSyntax typeArgument = typeArguments[i];
+
+				if (GetSymbol(typeArgument) is not INamedTypeSymbol typeSymbol)
+				{
+					newTypeArguments[i] = typeArgument;
+					continue;
+				}
+
+				newTypeArguments[i] = ParseTypeName(typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+			}
+
+			typeArguments = SeparatedList(newTypeArguments);
+		}
+
+		string name = namedTypeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+		name = name.Substring(0, name.IndexOf('<'));
+
+		return GenericName(
+			Identifier(name),
+			TypeArgumentList(typeArguments));
 	}
 
 	public override SyntaxNode? VisitMemberAccessExpression(MemberAccessExpressionSyntax node)
 	{
-		return ProcessNode(node, base.VisitMemberAccessExpression);
+		ISymbol? symbol = GetSymbol(node);
+
+		if (symbol is not (IFieldSymbol or IPropertySymbol or IMethodSymbol))
+		{
+			return base.VisitMemberAccessExpression(node);
+		}
+
+		if (symbol.IsStatic)
+		{
+			string containingType = symbol.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+
+			return MemberAccessExpression(
+				SyntaxKind.SimpleMemberAccessExpression,
+				IdentifierName(containingType),
+				node.Name);
+		}
+
+		if (_generationContext is { IsScopeClass: true, IsModule: false })
+		{
+			return MemberAccessExpression(
+				SyntaxKind.SimpleMemberAccessExpression,
+				IdentifierName("this"),
+				node.Name);
+		}
+
+		SyntaxNode expression = Visit(node.Expression);
+
+		if (expression is ExpressionSyntax expressionSyntax)
+		{
+			return MemberAccessExpression(
+				SyntaxKind.SimpleMemberAccessExpression,
+				expressionSyntax,
+				node.Name);
+		}
+
+		return base.VisitMemberAccessExpression(node);
 	}
 
-	private SyntaxNode? ProcessNode<T>(T node, Func<T, SyntaxNode?> visitFunction) where T : SyntaxNode
+	private ISymbol? GetSymbol(SyntaxNode node)
 	{
-		if (ReplaceNode(node, out SyntaxNode? replacement))
-		{
-			return replacement;
-		}
-
-		SyntaxNode fullyQualifiedName = ToFullyQualifiedName(node);
-
-		if (fullyQualifiedName != node)
-		{
-			return fullyQualifiedName;
-		}
-
-		return visitFunction(node);
-	}
-	
-	private SyntaxNode ToFullyQualifiedName(SyntaxNode node)
-	{
-		if (_compilation.ContainsSyntaxTree(node.SyntaxTree))
-		{
-			
-		}
-
-		SymbolInfo symbolInfo = _compilation.ContainsSyntaxTree(node.SyntaxTree)
-			? _compilation
+		SymbolInfo symbolInfo = Compilation.ContainsSyntaxTree(node.SyntaxTree)
+		? Compilation
 				.GetSemanticModel(node.SyntaxTree)
 				.GetSymbolInfo(node)
 			: new SymbolInfo();
 
-		if (symbolInfo.Symbol is INamedTypeSymbol namedTypeSymbol)
-		{
-			return ParseName(namedTypeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
-		}
-
-		if (symbolInfo.Symbol is IPropertySymbol propertySymbol)
-		{
-			if (!propertySymbol.IsStatic)
-			{
-				return ParseMember(node);
-			}
-			
-			string property = propertySymbol.Name;
-			string containingType = propertySymbol.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-
-			return ParseName($"{ParseName(containingType)}.{property}");
-		}
-
-		if (symbolInfo.Symbol is IFieldSymbol fieldSymbol)
-		{
-			if (!fieldSymbol.IsStatic)
-			{
-				return ParseMember(node);
-			}
-			
-			string field = fieldSymbol.Name;
-			string containingType = fieldSymbol.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-
-			return ParseName($"{ParseName(containingType)}.{field}");
-		}
-
-		if (symbolInfo.Symbol is IMethodSymbol methodSymbol)
-		{
-			if (!methodSymbol.IsStatic)
-			{
-				return ParseMember(node);
-			}
-
-			string method = methodSymbol.Name;
-			string containingType = methodSymbol.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-			
-			return ParseName($"{ParseName(containingType)}.{method}");
-		}
-		
-		return node;
-	}
-
-	private SyntaxNode ParseMember(SyntaxNode syntaxNode)
-	{
-		if (!_isScopeClass)
-		{
-			return syntaxNode;
-		}
-
-		return MemberAccessExpression(
-			SyntaxKind.SimpleMemberAccessExpression,
-			IdentifierName("_root"),
-			IdentifierName(syntaxNode.ToString()));
-	}
-
-	private bool ReplaceNode(SyntaxNode? node, out SyntaxNode? replacement)
-	{
-		if (_replaceServiceProviderToThis && node != null && _nodesToReplace?.Contains(node) == true)
-		{
-			replacement = ThisExpression();
-			return true;
-		}
-
-		replacement = null;
-		return false;
+		return symbolInfo.Symbol;
 	}
 
 	private class ParameterReferenceFinder : OperationWalker
