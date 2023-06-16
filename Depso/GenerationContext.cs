@@ -169,9 +169,10 @@ public class GenerationContext
 		return $"return {anonymousFunction.ExpressionBody};";
 	}
 
-	public IReadOnlyList<ITypeSymbol> GetConstructorParameters(INamedTypeSymbol type)
+	public IReadOnlyList<ITypeSymbol>? GetConstructorParameters(INamedTypeSymbol type)
 	{
-		return _constructorParameters[type];
+		_constructorParameters.TryGetValue(type, out IReadOnlyList<ITypeSymbol>? result);
+		return result;
 	}
 
 	public IReadOnlyList<ServiceDescriptor> GetEnumerableDescriptors(ITypeSymbol type)

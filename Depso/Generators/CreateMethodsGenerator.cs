@@ -161,7 +161,13 @@ public abstract class CreateMethodsGenerator : IGenerator
 		string fieldTypeName)
 	{
 		CodeBuilder codeBuilder = generationContext.CodeBuilder;
-		IReadOnlyList<ITypeSymbol> dependencies = generationContext.GetConstructorParameters(typeSymbol);
+		IReadOnlyList<ITypeSymbol>? dependencies = generationContext.GetConstructorParameters(typeSymbol);
+
+		if (dependencies == null)
+		{
+			// This will be reported while creating the dependency graph.
+			return;
+		}
 		
 		if (dependencies.Count == 0)
 		{
