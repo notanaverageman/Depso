@@ -8,7 +8,8 @@ public partial class Provider
         :
         global::System.IDisposable,
         global::System.IAsyncDisposable,
-        global::System.IServiceProvider
+        global::System.IServiceProvider,
+        global::Microsoft.Extensions.DependencyInjection.IServiceScope
     {
         private readonly object _sync = new object();
         private readonly global::Provider _root;
@@ -20,6 +21,8 @@ public partial class Provider
 
         private global::System.Collections.Generic.IEnumerable<global::Dependency5>? _enumerableDependency5;
         private global::System.Collections.Generic.IEnumerable<global::Dependency5> EnumerableDependency5 => _enumerableDependency5 ??= CreateEnumerableDependency5();
+
+        global::System.IServiceProvider global::Microsoft.Extensions.DependencyInjection.IServiceScope.ServiceProvider => this;
 
         public Scope(global::Provider root, object? sync)
         {

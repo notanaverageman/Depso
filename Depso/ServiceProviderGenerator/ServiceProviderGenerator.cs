@@ -256,6 +256,8 @@ public partial class ServiceProviderGenerator : IIncrementalGenerator
 						new SingletonFieldsFactoryGenerator(),
 						new EnumerableFieldsGenerator(),
 
+						new ServiceScopeFactoryGenerator(),
+
 						new GetServiceMethodGenerator(),
 						new GetServiceGenericMethodGenerator(),
 
@@ -263,6 +265,8 @@ public partial class ServiceProviderGenerator : IIncrementalGenerator
 						new TransientCreateMethodsGenerator(),
 
 						new CreateScopeMethodGenerator(),
+
+						new ServiceProviderIsServiceGenerator(),
 
 						new DisposeMethodGenerator(),
 						new DisposeAsyncMethodGenerator(),
@@ -325,6 +329,8 @@ public partial class ServiceProviderGenerator : IIncrementalGenerator
 					new ScopedFieldsGenerator(),
 					new ScopedFieldsFactoryGenerator(),
 					new EnumerableFieldsGenerator(),
+
+					new ServiceScopeGenerator(),
 
 					new ConstructorGenerator(),
 

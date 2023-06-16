@@ -8,7 +8,8 @@ public partial class Provider
         :
         global::System.IDisposable,
         global::System.IAsyncDisposable,
-        global::System.IServiceProvider
+        global::System.IServiceProvider,
+        global::Microsoft.Extensions.DependencyInjection.IServiceScope
     {
         private readonly object _sync = new object();
         private readonly global::Provider _root;
@@ -16,6 +17,8 @@ public partial class Provider
         private bool _isDisposed;
         private global::System.Collections.Generic.List<global::System.IDisposable>? _transientDisposables;
         private global::System.Collections.Generic.List<global::System.IAsyncDisposable>? _transientAsyncDisposables;
+
+        global::System.IServiceProvider global::Microsoft.Extensions.DependencyInjection.IServiceScope.ServiceProvider => this;
 
         public Scope(global::Provider root, object? sync)
         {

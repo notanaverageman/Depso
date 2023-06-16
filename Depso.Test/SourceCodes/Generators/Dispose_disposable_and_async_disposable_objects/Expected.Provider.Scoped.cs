@@ -8,7 +8,8 @@ public partial class Provider
         :
         global::System.IDisposable,
         global::System.IAsyncDisposable,
-        global::System.IServiceProvider
+        global::System.IServiceProvider,
+        global::Microsoft.Extensions.DependencyInjection.IServiceScope
     {
         private readonly object _sync = new object();
         private readonly global::Provider _root;
@@ -28,6 +29,8 @@ public partial class Provider
 
         private global::Scoped4? _scoped4_0;
         private global::Scoped4 Scoped4_0 => _scoped4_0 ??= CreateScoped4();
+
+        global::System.IServiceProvider global::Microsoft.Extensions.DependencyInjection.IServiceScope.ServiceProvider => this;
 
         public Scope(global::Provider root, object? sync)
         {

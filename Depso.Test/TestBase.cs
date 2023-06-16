@@ -132,10 +132,12 @@ public abstract class TestBase
 		out ImmutableArray<Diagnostic> diagnostics) where T : IIncrementalGenerator, new()
 	{
 		List<MetadataReference> references = new();
-
+		
 		Assembly[] assemblies =
 		{
-			typeof(object).Assembly
+			typeof(object).Assembly,
+			typeof(ServiceProviderServiceExtensions).Assembly,
+			AppDomain.CurrentDomain.GetAssemblies().Single(x => x.GetName().Name == "System.Runtime")
 		};
 
 		foreach (Assembly assembly in assemblies)

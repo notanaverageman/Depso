@@ -6,7 +6,9 @@ public partial class Provider
     :
     global::System.IDisposable,
     global::System.IAsyncDisposable,
-    global::System.IServiceProvider
+    global::System.IServiceProvider,
+    global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory,
+    global::Microsoft.Extensions.DependencyInjection.IServiceProviderIsService
 {
     private readonly object _sync = new object();
 
@@ -28,6 +30,8 @@ public partial class Provider
 
     private global::Singleton4? _singleton4_0;
     private global::Singleton4 Singleton4_0 => _singleton4_0 ??= CreateSingleton4();
+
+    global::Microsoft.Extensions.DependencyInjection.IServiceScope global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory.CreateScope() => this.CreateScope(_sync);
 
     public object? GetService(global::System.Type serviceType)
     {
@@ -174,6 +178,34 @@ public partial class Provider
     {
         ThrowIfDisposed();
         return new global::Provider.Scope(this, sync);
+    }
+
+    public bool IsService(global::System.Type serviceType)
+    {
+        if (serviceType.IsGenericType && serviceType.GetGenericTypeDefinition() == typeof(global::System.Collections.Generic.IEnumerable<>))
+        {
+            serviceType = serviceType.GetGenericArguments()[0];
+        }
+
+        return false
+            || serviceType == typeof(global::Scoped1)
+            || serviceType == typeof(global::Scoped2)
+            || serviceType == typeof(global::Scoped3)
+            || serviceType == typeof(global::Scoped4)
+            || serviceType == typeof(global::ScopedInterface1)
+            || serviceType == typeof(global::ScopedInterface2)
+            || serviceType == typeof(global::Singleton1)
+            || serviceType == typeof(global::Singleton2)
+            || serviceType == typeof(global::Singleton3)
+            || serviceType == typeof(global::Singleton4)
+            || serviceType == typeof(global::SingletonInterface1)
+            || serviceType == typeof(global::SingletonInterface2)
+            || serviceType == typeof(global::Transient1)
+            || serviceType == typeof(global::Transient2)
+            || serviceType == typeof(global::Transient3)
+            || serviceType == typeof(global::Transient4)
+            || serviceType == typeof(global::TransientInterface1)
+            || serviceType == typeof(global::TransientInterface2);
     }
 
     public void Dispose()

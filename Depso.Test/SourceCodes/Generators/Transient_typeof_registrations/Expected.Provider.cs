@@ -6,7 +6,9 @@ public partial class Provider
     :
     global::System.IDisposable,
     global::System.IAsyncDisposable,
-    global::System.IServiceProvider
+    global::System.IServiceProvider,
+    global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory,
+    global::Microsoft.Extensions.DependencyInjection.IServiceProviderIsService
 {
     private readonly object _sync = new object();
 
@@ -16,6 +18,8 @@ public partial class Provider
     private bool _isDisposed;
     private global::System.Collections.Generic.List<global::System.IDisposable>? _transientDisposables;
     private global::System.Collections.Generic.List<global::System.IAsyncDisposable>? _transientAsyncDisposables;
+
+    global::Microsoft.Extensions.DependencyInjection.IServiceScope global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory.CreateScope() => this.CreateScope(_sync);
 
     public object? GetService(global::System.Type serviceType)
     {
@@ -102,6 +106,26 @@ public partial class Provider
     {
         ThrowIfDisposed();
         return new global::Provider.Scope(this, sync);
+    }
+
+    public bool IsService(global::System.Type serviceType)
+    {
+        if (serviceType.IsGenericType && serviceType.GetGenericTypeDefinition() == typeof(global::System.Collections.Generic.IEnumerable<>))
+        {
+            serviceType = serviceType.GetGenericArguments()[0];
+        }
+
+        return false
+            || serviceType == typeof(global::Interface1)
+            || serviceType == typeof(global::Interface2)
+            || serviceType == typeof(global::Interface3)
+            || serviceType == typeof(global::Interface4)
+            || serviceType == typeof(global::InterfaceA)
+            || serviceType == typeof(global::InterfaceB)
+            || serviceType == typeof(global::Service1)
+            || serviceType == typeof(global::Service2)
+            || serviceType == typeof(global::Service3)
+            || serviceType == typeof(global::Service4);
     }
 
     public void Dispose()
