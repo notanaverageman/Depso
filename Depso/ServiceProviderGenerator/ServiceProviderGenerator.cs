@@ -119,8 +119,67 @@ public partial class ServiceProviderGenerator : IIncrementalGenerator
 				.GetAttributes()
 				.Any(x => x.AttributeClass?.ToDisplayString() == ServiceProviderModule.FullName);
 
+			try
+			{
+				string registrationMethods = CreateRegistrationMethods(classSymbol, isStatic: isModule);
+				SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(
+					registrationMethods,
+					CSharpParseOptions.Default.WithLanguageVersion(((CSharpCompilation)compilation).LanguageVersion));
+
+				context.AddSource(
+					$"{Constants.GeneratorNamespace}.{classSymbol.ToDisplayString()}.RegistrationMethods.g.cs",
+					registrationMethods);
+
+				compilation = compilation.AddSyntaxTrees(syntaxTree);
+			}
+			catch (Exception exception)
+			{
+				Diagnostic diagnostic = Diagnostic.Create(
+					Diagnostics.InternalError,
+					Location.Create(@class.SyntaxTree, @class.Identifier.Span),
+					exception);
+
+				context.ReportDiagnostic(diagnostic);
+			}
+		}
+
+		foreach (ClassDeclarationSyntax? @class in classes.Distinct())
+		{
+			if (context.CancellationToken.IsCancellationRequested)
+			{
+				return;
+			}
+
+			if (@class == null)
+			{
+				continue;
+			}
+
+			INamedTypeSymbol? classSymbol = compilation.GetSemanticModel(@class.SyntaxTree).GetDeclaredSymbol(@class);
+
+			if (classSymbol == null)
+			{
+				continue;
+			}
+
+			bool isModule = classSymbol
+				.GetAttributes()
+				.Any(x => x.AttributeClass?.ToDisplayString() == ServiceProviderModule.FullName);
+
+			try
+			{
 			ProcessServiceProvider(compilation, context, knownTypes, @class, classSymbol, isModule);
 		}
+			catch (Exception exception)
+			{
+				Diagnostic diagnostic = Diagnostic.Create(
+					Diagnostics.InternalError,
+					Location.Create(@class.SyntaxTree, @class.Identifier.Span),
+					exception);
+
+				context.ReportDiagnostic(diagnostic);
+			}
+	}
 	}
 
 	private static void ProcessServiceProvider(
@@ -131,14 +190,6 @@ public partial class ServiceProviderGenerator : IIncrementalGenerator
 		INamedTypeSymbol classSymbol,
 		bool isModule)
 	{
-		string registrationMethods = CreateRegistrationMethods(classSymbol, isStatic: isModule);
-		SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(registrationMethods);
-
-		context.AddSource($"{Constants.GeneratorNamespace}.{classSymbol.ToDisplayString()}.RegistrationMethods.g.cs", registrationMethods);
-
-		compilation = compilation.AddSyntaxTrees(syntaxTree);
-		classSymbol = compilation.GetSemanticModel(@class.SyntaxTree).GetDeclaredSymbol(@class)!;
-
 		IMethodSymbol? registerServicesMethod = classSymbol.GetMembers()
 			.OfType<IMethodSymbol>()
 			.FirstOrDefault(x => x.IsRegisterServicesMethod(isStatic: isModule));
