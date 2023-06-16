@@ -127,7 +127,21 @@ public abstract class CreateMethodsGenerator : IGenerator
 			using (codeBuilder.Lock(Constants.LockFieldName))
 			{
 				codeBuilder.AppendLine($"{Constants.ThrowIfDisposedMethodName}();");
-				codeBuilder.AppendLine(factoryInvocation);
+				int currentOffset = codeBuilder.CurrentOffset;
+
+				using System.IO.StringReader reader = new(factoryInvocation);
+				int lineCount = 0;
+
+				while (reader.ReadLine() is { } line)
+				{
+					codeBuilder.AppendLine(line.TrimStart());
+					lineCount++;
+				}
+
+				if (lineCount > 1)
+				{
+					codeBuilder.Insert(CodeBuilder.NewLine, currentOffset);
+				}
 			}
 		}
 
