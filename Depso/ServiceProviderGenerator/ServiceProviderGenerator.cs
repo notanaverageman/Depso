@@ -161,15 +161,15 @@ public partial class ServiceProviderGenerator : IIncrementalGenerator
 			{
 				continue;
 			}
-
+			
 			bool isModule = classSymbol
 				.GetAttributes()
 				.Any(x => x.AttributeClass?.ToDisplayString() == ServiceProviderModule.FullName);
 
 			try
 			{
-			ProcessServiceProvider(compilation, context, knownTypes, @class, classSymbol, isModule);
-		}
+				ProcessServiceProvider(compilation, context, knownTypes, @class, classSymbol, isModule);
+			}
 			catch (Exception exception)
 			{
 				Diagnostic diagnostic = Diagnostic.Create(
@@ -179,7 +179,7 @@ public partial class ServiceProviderGenerator : IIncrementalGenerator
 
 				context.ReportDiagnostic(diagnostic);
 			}
-	}
+		}
 	}
 
 	private static void ProcessServiceProvider(
@@ -247,10 +247,10 @@ public partial class ServiceProviderGenerator : IIncrementalGenerator
 
 		if (scopeClassSource != null)
 		{
-		context.AddSource(
-			$"{Constants.GeneratorNamespace}.{classSymbol.ToDisplayString()}.Scoped.g.cs",
-			scopeClassSource);
-	}
+			context.AddSource(
+				$"{Constants.GeneratorNamespace}.{classSymbol.ToDisplayString()}.Scoped.g.cs",
+				scopeClassSource);
+		}
 	}
 
 	private static string ProcessClass(GenerationContext generationContext)
@@ -265,23 +265,26 @@ public partial class ServiceProviderGenerator : IIncrementalGenerator
 		codeBuilder.AppendLine("#nullable enable");
 		codeBuilder.AppendLine();
 
+		if (generationContext.IsModule)
+		{
+			foreach (ServiceDescriptor serviceDescriptor in generationContext.ServiceDescriptors)
+			{
+				generationContext.IndexManager.Add(serviceDescriptor);
+			}
+
+			AddModuleAttributes(codeBuilder);
+		}
+
 		using (AddNamespace(classSymbol, codeBuilder))
 		{
 			if (generationContext.IsModule)
 			{
 				foreach (ServiceDescriptor serviceDescriptor in generationContext.ServiceDescriptors)
 				{
-					generationContext.IndexManager.Add(serviceDescriptor);
-				}
-				
-				AddModuleAttributes(codeBuilder);
-
-				foreach (ServiceDescriptor serviceDescriptor in generationContext.ServiceDescriptors)
-				{
 					AddRegistrationAttributeToModuleClass(generationContext, codeBuilder, serviceDescriptor);
 				}
 
-				codeBuilder.AppendLine($"[global::{Constants.GeneratedModuleAttributeClassName}]");
+				codeBuilder.AppendLine($"[{Constants.GeneratedModuleAttributeClassName}]");
 			}
 
 			using (ClassBuilder classBuilder = AddClass(classSymbol, codeBuilder))
@@ -292,7 +295,7 @@ public partial class ServiceProviderGenerator : IIncrementalGenerator
 				}
 				else
 				{
-					AddClassInterfaces(generationContext.KnownTypes, classBuilder);
+					AddClassInterfaces(generationContext.KnownTypes, classBuilder, isScope: false);
 
 					List<IGenerator> generators = new()
 					{
@@ -349,7 +352,7 @@ public partial class ServiceProviderGenerator : IIncrementalGenerator
 	private static string? ProcessScopeClass(GenerationContext generationContext)
 	{
 		if(generationContext.IsModule)
-	{
+		{
 			return null;
 		}
 
@@ -371,7 +374,7 @@ public partial class ServiceProviderGenerator : IIncrementalGenerator
 		{
 			using (ClassBuilder classBuilder = codeBuilder.Class(Constants.ScopeClassName).Public())
 			{
-				AddClassInterfaces(generationContext.KnownTypes, classBuilder);
+				AddClassInterfaces(generationContext.KnownTypes, classBuilder, isScope: true);
 
 				List<IGenerator> generators = new()
 				{
@@ -566,25 +569,30 @@ public partial class ServiceProviderGenerator : IIncrementalGenerator
 			}
 		}
 
-		codeBuilder.AppendLine($"[global::{serviceDescriptor.Lifetime}({stringBuilder})]");
+		codeBuilder.AppendLine($"[{serviceDescriptor.Lifetime}({stringBuilder})]");
 	}
 
-	private static void AddClassInterfaces(KnownTypes knownTypes, ClassBuilder classBuilder)
+	private static void AddClassInterfaces(KnownTypes knownTypes, ClassBuilder classBuilder, bool isScope)
 	{
-		void AddInterfaceIfPossible(INamedTypeSymbol? symbol, string interfaceName)
+		void AddInterfaceIfPossible(INamedTypeSymbol? symbol, string interfaceName, bool prerequisite)
 		{
+			if (!prerequisite)
+			{
+				return;
+			}
+
 			if (symbol != null)
 			{
 				classBuilder.Base(interfaceName.WithGlobalPrefix());
 			}
 		}
 
-		AddInterfaceIfPossible(knownTypes.IDisposable, Constants.IDisposableMetadataName);
-		AddInterfaceIfPossible(knownTypes.IAsyncDisposable, Constants.IAsyncDisposableMetadataName);
-		AddInterfaceIfPossible(knownTypes.IServiceProvider, Constants.IServiceProviderMetadataName);
-		AddInterfaceIfPossible(knownTypes.IServiceScope, Constants.IServiceScopeMetadataName);
-		AddInterfaceIfPossible(knownTypes.IServiceScopeFactory, Constants.IServiceScopeFactoryMetadataName);
-		AddInterfaceIfPossible(knownTypes.IServiceProviderIsService, Constants.IServiceProviderIsServiceMetadataName);
+		AddInterfaceIfPossible(knownTypes.IDisposable, Constants.IDisposableMetadataName, true);
+		AddInterfaceIfPossible(knownTypes.IAsyncDisposable, Constants.IAsyncDisposableMetadataName, true);
+		AddInterfaceIfPossible(knownTypes.IServiceProvider, Constants.IServiceProviderMetadataName, true);
+		AddInterfaceIfPossible(knownTypes.IServiceScope, Constants.IServiceScopeMetadataName, isScope);
+		AddInterfaceIfPossible(knownTypes.IServiceScopeFactory, Constants.IServiceScopeFactoryMetadataName, !isScope);
+		AddInterfaceIfPossible(knownTypes.IServiceProviderIsService, Constants.IServiceProviderIsServiceMetadataName, !isScope);
 	}
 
 	private static IDisposable AddNamespace(INamedTypeSymbol classSymbol, CodeBuilder builder)
