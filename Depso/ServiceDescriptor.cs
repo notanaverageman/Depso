@@ -99,9 +99,9 @@ public class ServiceDescriptor
 		{
 			throw new InvalidOperationException("Trying to create createX method when Factory is not null.");
 		}
-
-		ITypeSymbol symbol = ImplementationType ?? ServiceType;
-		return $"Create{symbol.Name.ToPascalCase()}";
+		
+		string propertyName = GetFieldName().ToPropertyName();
+		return $"Create{propertyName}";
 	}
 
 	public string GetFactoryMethodName()
