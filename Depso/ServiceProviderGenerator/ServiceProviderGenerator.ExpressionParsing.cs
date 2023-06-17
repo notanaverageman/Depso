@@ -46,10 +46,17 @@ public partial class ServiceProviderGenerator
 		{
 			SyntaxNode syntax = registerServicesMethod.DeclaringSyntaxReferences.First().GetSyntax();
 
+			DiagnosticDescriptor diagnosticDescriptor = Diagnostics.RegisterServicesMethodNotFound;
+
+			if (generationContext.IsModule)
+			{
+				diagnosticDescriptor = Diagnostics.RegisterServicesStaticMethodNotFound;
+			}
+
 			Diagnostic diagnostic = Diagnostic.Create(
-				Diagnostics.RegisterServicesStaticMethodNotFound,
+				diagnosticDescriptor,
 				Location.Create(syntax.SyntaxTree, syntax.Span),
-				registerServicesMethod.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
+				registerServicesMethod.ContainingType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
 
 			generationContext.SourceProductionContext.ReportDiagnostic(diagnostic);
 
