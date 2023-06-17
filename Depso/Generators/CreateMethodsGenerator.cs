@@ -1,4 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using Depso.CSharp;
 
@@ -234,9 +234,16 @@ public abstract class CreateMethodsGenerator : IGenerator
 
 			ServiceDescriptor serviceDescriptor = serviceDescriptors[i];
 
+			string fieldPrefix = "";
+
+			if (serviceDescriptor.Lifetime == Lifetime.Singleton && generationContext.IsScopeClass)
+			{
+				fieldPrefix = "_root.";
+			}
+
 			string getter = serviceDescriptor.Lifetime == Lifetime.Transient
 				? $"{serviceDescriptor.GetCreateMethodName()}()"
-				: serviceDescriptor.GetFieldName().ToPropertyName();
+				: $"{fieldPrefix}{serviceDescriptor.GetFieldName().ToPropertyName()}";
 			
 			codeBuilder.AppendLine($"{getter}{comma}");
 		}
