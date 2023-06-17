@@ -18,10 +18,19 @@ public class ScopedGetServicesGenerator : Generators.ScopedGetServicesGenerator
 		}
 
 		string typeName = serviceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+
+		if (serviceDescriptor.RedirectToThis)
+		{
+			codeBuilder.AppendLine($"if (serviceType == typeof({typeName})) return this;");
+
+		}
+		else
+		{
 		string fieldName = serviceDescriptor.GetFieldName();
 		string propertyName = fieldName.ToPropertyName();
 		
 		codeBuilder.AppendLine($"if (serviceType == typeof({typeName})) return {propertyName};");
+		}
 
 		generationContext.AddNewLine = true;
 	}

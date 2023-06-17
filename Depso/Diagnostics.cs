@@ -81,8 +81,8 @@ public static class Diagnostics
 
 	public static readonly DiagnosticDescriptor MissingDependencies = new(
 		"DEP009",
-		"Constructor misses dependencies",
-		"Constructor misses dependencies: {0}",
+		"Constructor for type {0} misses dependencies",
+		"Constructor for type {0} misses dependencies: {1}",
 		"Usage",
 		DiagnosticSeverity.Error,
 		true);

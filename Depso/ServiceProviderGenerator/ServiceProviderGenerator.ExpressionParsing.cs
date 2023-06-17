@@ -12,6 +12,26 @@ public partial class ServiceProviderGenerator
 {
 	private static bool PopulateServices(GenerationContext generationContext)
 	{
+		// Add service provider interfaces to be able to resolve them via this instance.
+		void AddIfNotNull(INamedTypeSymbol? symbol, Lifetime lifetime)
+		{
+			if (symbol != null)
+			{
+				ServiceDescriptor serviceDescriptor = new(lifetime, symbol)
+				{
+					RedirectToThis = true
+				};
+
+				generationContext.AddServiceDescriptor(serviceDescriptor);
+			}
+		}
+
+		AddIfNotNull(generationContext.KnownTypes.IServiceProvider, Lifetime.Singleton);
+		AddIfNotNull(generationContext.KnownTypes.IServiceProvider, Lifetime.Scoped);
+		AddIfNotNull(generationContext.KnownTypes.IServiceScope, Lifetime.Scoped);
+		AddIfNotNull(generationContext.KnownTypes.IServiceScopeFactory, Lifetime.Singleton);
+		AddIfNotNull(generationContext.KnownTypes.IServiceProviderIsService, Lifetime.Singleton);
+
 		return PopulateServices(generationContext, generationContext.RegisterServicesMethod);
 	}
 

@@ -21,6 +21,11 @@ public abstract class CreateMethodsGenerator : IGenerator
 				continue;
 			}
 			
+			if (serviceDescriptor.RedirectToThis)
+			{
+				continue;
+			}
+			
 			if (serviceDescriptor.Factory == null)
 			{
 				INamedTypeSymbol concreteType = serviceDescriptor.ImplementationType ?? serviceDescriptor.ServiceType;

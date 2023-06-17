@@ -93,6 +93,11 @@ public class DisposeMethodGenerator : IGenerator
 				continue;
 			}
 
+			if (serviceDescriptor.RedirectToThis)
+			{
+				continue;
+			}
+
 			if (generationContext.IsScopeClass && serviceDescriptor.Lifetime == Lifetime.Singleton)
 			{
 				continue;

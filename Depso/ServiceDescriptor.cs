@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 
 namespace Depso;
 
 public record struct Index(int Field, int CreateMethod);
 
+[DebuggerDisplay("{GetDebuggerDisplay()}")]
 public class ServiceDescriptor
 {
 	private readonly Dictionary<ITypeSymbol, Index> _indices;
@@ -15,6 +18,7 @@ public class ServiceDescriptor
 	public INamedTypeSymbol? ImplementationType { get; init; }
 	public IReadOnlyList<INamedTypeSymbol>? AlsoRegisterAs { get; init; }
 	public SyntaxNode? Factory { get; init; }
+	public bool RedirectToThis { get; init; }
 
 	public INamedTypeSymbol ConcreteType => ImplementationType ?? ServiceType;
 
@@ -109,5 +113,16 @@ public class ServiceDescriptor
 
 		string propertyName = GetFieldName().ToPropertyName();
 		return $"Factory{propertyName}";
+	}
+
+	private string GetDebuggerDisplay()
+	{
+		string? alsoRegisterAs = AlsoRegisterAs == null
+			? null
+			: string.Join(", ", AlsoRegisterAs.Select(x => x.ToDisplayString()));
+
+		return $"""
+			S: {ServiceType.ToDisplayString()} - I: {ImplementationType?.ToDisplayString()} - F: {Factory} - A: {alsoRegisterAs}
+			""";
 	}
 }

@@ -31,6 +31,11 @@ public class SingletonFieldsGenerator : IGenerator
 				continue;
 			}
 
+			if (serviceDescriptor.RedirectToThis)
+			{
+				continue;
+			}
+
 			if (serviceDescriptor.Factory != null)
 			{
 				continue;

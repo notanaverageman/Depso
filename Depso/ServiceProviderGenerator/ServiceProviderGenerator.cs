@@ -530,6 +530,11 @@ public partial class ServiceProviderGenerator : IIncrementalGenerator
 		CodeBuilder codeBuilder,
 		ServiceDescriptor serviceDescriptor)
 	{
+		if (serviceDescriptor.RedirectToThis)
+		{
+			return;
+		}
+
 		INamedTypeSymbol service = serviceDescriptor.ServiceType;
 		INamedTypeSymbol? implementation = serviceDescriptor.ImplementationType;
 

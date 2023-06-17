@@ -212,7 +212,7 @@ public class GenerationContext
 				continue;
 			}
 			
-			ConstructorSelectionResult selectionResult = SelectConstructor(typeSymbol);
+			ConstructorSelectionResult selectionResult = SelectConstructor(serviceDescriptor, typeSymbol);
 
 			// Don't report diagnostics on modules. Modules may not have all the necessary
 			// services registered yet.
@@ -277,9 +277,14 @@ public class GenerationContext
 		}
 	}
 
-	private ConstructorSelectionResult SelectConstructor(INamedTypeSymbol symbol)
+	private ConstructorSelectionResult SelectConstructor(ServiceDescriptor serviceDescriptor, INamedTypeSymbol symbol)
 	{
 		ConstructorSelectionResult result = new(this);
+
+		if (serviceDescriptor.RedirectToThis)
+		{
+			return result;
+		}
 
 		// No need to search for a constructor on non constructible types.
 		if (symbol.IsAbstract || symbol.IsStatic || symbol.TypeKind == TypeKind.Interface)
