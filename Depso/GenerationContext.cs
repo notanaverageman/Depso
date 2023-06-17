@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -141,10 +141,10 @@ public class GenerationContext
 		}
 	}
 
-	public ServiceDescriptor GetEffectiveServiceDescriptorForType(ITypeSymbol serviceType)
+	public ServiceDescriptor GetEffectiveServiceDescriptorForType(ITypeSymbol serviceType, Lifetime lifetime)
 	{
 		IReadOnlyList<ServiceDescriptor> descriptors = _serviceDescriptorCache.GetDescriptorsForService(serviceType);
-		ServiceDescriptor serviceDescriptor = descriptors.Last();
+		ServiceDescriptor serviceDescriptor = descriptors.Last(x => x.Lifetime == lifetime);
 
 		return serviceDescriptor;
 	}

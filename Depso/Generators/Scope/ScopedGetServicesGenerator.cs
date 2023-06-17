@@ -14,7 +14,9 @@ public class ScopedGetServicesGenerator : Generators.ScopedGetServicesGenerator
 
 		if (serviceDescriptor.Factory == null)
 		{
-			serviceDescriptor = generationContext.GetEffectiveServiceDescriptorForType(serviceType);
+			serviceDescriptor = generationContext.GetEffectiveServiceDescriptorForType(
+				serviceType,
+				Lifetime.Scoped);
 		}
 
 		string typeName = serviceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
@@ -26,10 +28,10 @@ public class ScopedGetServicesGenerator : Generators.ScopedGetServicesGenerator
 		}
 		else
 		{
-		string fieldName = serviceDescriptor.GetFieldName();
-		string propertyName = fieldName.ToPropertyName();
-		
-		codeBuilder.AppendLine($"if (serviceType == typeof({typeName})) return {propertyName};");
+			string fieldName = serviceDescriptor.GetFieldName();
+			string propertyName = fieldName.ToPropertyName();
+
+			codeBuilder.AppendLine($"if (serviceType == typeof({typeName})) return {propertyName};");
 		}
 
 		generationContext.AddNewLine = true;

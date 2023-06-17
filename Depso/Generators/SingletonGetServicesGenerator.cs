@@ -48,7 +48,9 @@ public class SingletonGetServicesGenerator : IGenerator
 	{
 		CodeBuilder codeBuilder = generationContext.CodeBuilder;
 		
-		ServiceDescriptor serviceDescriptor = generationContext.GetEffectiveServiceDescriptorForType(serviceType);
+		ServiceDescriptor serviceDescriptor = generationContext.GetEffectiveServiceDescriptorForType(
+			serviceType,
+			Lifetime.Singleton);
 
 		string typeName = serviceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
@@ -58,10 +60,10 @@ public class SingletonGetServicesGenerator : IGenerator
 		}
 		else
 		{
-		string fieldName = serviceDescriptor.GetFieldName();
-		string propertyName = fieldName.ToPropertyName();
-		
-		codeBuilder.AppendLine($"if (serviceType == typeof({typeName})) return {propertyName};");
+			string fieldName = serviceDescriptor.GetFieldName();
+			string propertyName = fieldName.ToPropertyName();
+
+			codeBuilder.AppendLine($"if (serviceType == typeof({typeName})) return {propertyName};");
 		}
 
 		generationContext.AddNewLine = true;

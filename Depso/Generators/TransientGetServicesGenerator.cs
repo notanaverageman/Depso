@@ -59,7 +59,9 @@ public class TransientGetServicesGenerator : IGenerator
 
 		string typeName = serviceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
-		ServiceDescriptor serviceDescriptor = generationContext.GetEffectiveServiceDescriptorForType(serviceType);
+		ServiceDescriptor serviceDescriptor = generationContext.GetEffectiveServiceDescriptorForType(
+			serviceType,
+			Lifetime.Transient);
 
 		string methodName = serviceDescriptor.Factory == null
 			? serviceDescriptor.GetCreateMethodName()
