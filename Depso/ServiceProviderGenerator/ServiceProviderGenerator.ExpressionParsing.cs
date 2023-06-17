@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -175,7 +175,7 @@ public partial class ServiceProviderGenerator
 			// Get the registrations from attributes.
 			foreach (AttributeData attributeData in moduleType.GetAttributes())
 			{
-				ProcessModuleAttribute(generationContext, moduleSyntax, moduleType, attributeData);
+				ProcessModuleAttribute(generationContext, moduleSyntax, attributeData);
 			}
 		}
 	}
@@ -183,23 +183,11 @@ public partial class ServiceProviderGenerator
 	private static void ProcessModuleAttribute(
 		GenerationContext generationContext,
 		TypeSyntax moduleSyntax,
-		INamedTypeSymbol moduleSymbol,
 		AttributeData attribute)
 	{
 		string? attributeName = attribute.AttributeClass?.ToDisplayString();
 		ImmutableArray<TypedConstant> arguments = attribute.ConstructorArguments;
-
-		if (attributeName == Constants.GeneratedModuleAttributeClassName)
-		{
-			return;
-		}
-
-		if (arguments.Length == 0)
-		{
-			ReportIllegalStatementDiagnostic(generationContext, moduleSyntax);
-			return;
-		}
-
+		
 		Lifetime? lifetime = attributeName switch
 		{
 			$"{nameof(Lifetime.Singleton)}Attribute" => Lifetime.Singleton,
@@ -208,18 +196,18 @@ public partial class ServiceProviderGenerator
 			_ => null
 		};
 
+		// Ignore attributes other than lifetime registrations.
 		if (lifetime == null)
 		{
-			ReportIllegalStatementDiagnostic(generationContext, moduleSyntax);
 			return;
 		}
 
-		if (arguments[0].Value is not INamedTypeSymbol serviceType)
+		if (arguments.Length == 0 || arguments[0].Value is not INamedTypeSymbol serviceType)
 		{
 			ReportIllegalStatementDiagnostic(generationContext, moduleSyntax);
 			return;
 		}
-
+		
 		MemberAccessContext memberAccessContext = new();
 
 		INamedTypeSymbol? implementationType = arguments.Length > 1 ? arguments[1].Value as INamedTypeSymbol : null;
