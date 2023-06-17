@@ -631,7 +631,7 @@ public partial class ServiceProviderGenerator
 
 	private static void ReportIllegalStatementDiagnostic(GenerationContext generationContext, SyntaxNode node)
 	{
-		Location location = Location.Create(node.SyntaxTree, node.Span);
+		Location? location = Location.Create(node.SyntaxTree, node.Span);
 
 		if (node.Parent is InvocationExpressionSyntax i1)
 		{
@@ -650,6 +650,11 @@ public partial class ServiceProviderGenerator
 			location = Location.Create(
 				location.SourceTree!,
 				new TextSpan(span.Start, span.Length + argumentSpan.Length));
+		}
+
+		if(location.SourceTree != null && !generationContext.Compilation.ContainsSyntaxTree(location.SourceTree))
+		{
+			location = null;
 		}
 
 		// TODO: List all available statements.

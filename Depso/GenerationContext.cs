@@ -495,8 +495,25 @@ public class GenerationContext
 
 		public void ReportDiagnostic(INamedTypeSymbol symbol)
 		{
-			Location? location =
-				(symbol.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax() as ClassDeclarationSyntax)?.Identifier.GetLocation();
+			SyntaxToken? token = Error switch
+			{
+				ConstructorSelectionError.MissingParameters => (BestCandidateMissingParameters?.DeclaringSyntaxReferences
+					.FirstOrDefault()
+					?.GetSyntax() as ConstructorDeclarationSyntax)
+					?.Identifier,
+				ConstructorSelectionError.AmbiguousMatch => (AmbiguousConstructors.First().DeclaringSyntaxReferences
+					.FirstOrDefault()
+					?.GetSyntax() as ConstructorDeclarationSyntax)
+					?.Identifier,
+				_ => (symbol.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax() as ClassDeclarationSyntax)?.Identifier
+			};
+
+			Location? location = token?.GetLocation();
+
+			if(location?.SourceTree != null && !_generationContext.Compilation.ContainsSyntaxTree(location.SourceTree))
+			{
+				location = null;
+			}
 
 			Diagnostic diagnostic = Error switch
 			{
@@ -507,23 +524,17 @@ public class GenerationContext
 				ConstructorSelectionError.MissingParameters =>
 					Diagnostic.Create(
 						Diagnostics.MissingDependencies,
-						(BestCandidateMissingParameters?.DeclaringSyntaxReferences
-							.FirstOrDefault()
-							?.GetSyntax() as ConstructorDeclarationSyntax)
-							?.Identifier
-							.GetLocation(),
+						location,
+						symbol.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat),
 						string.Join(", ", MissingParameters.Select(x => x.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat)))),
 				ConstructorSelectionError.AmbiguousMatch =>
 					Diagnostic.Create(
 						Diagnostics.AmbiguousConstructors,
-						(AmbiguousConstructors.First().DeclaringSyntaxReferences
-							.FirstOrDefault()
-							?.GetSyntax() as ConstructorDeclarationSyntax)
-						?.Identifier
-						.GetLocation(),
+						location,
 						string.Join(", ", AmbiguousConstructors.Select(x => x.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat)))),
 				_ => throw new ArgumentOutOfRangeException(nameof(Error)),
 			};
+
 			_generationContext.SourceProductionContext.ReportDiagnostic(diagnostic);
 		}
 	}
