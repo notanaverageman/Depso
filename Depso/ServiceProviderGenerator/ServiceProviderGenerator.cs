@@ -94,9 +94,7 @@ public partial class ServiceProviderGenerator : IIncrementalGenerator
 				continue;
 			}
 
-			INamedTypeSymbol? classSymbol = compilation.GetSemanticModel(@class.SyntaxTree).GetDeclaredSymbol(@class);
-
-			if (classSymbol == null)
+			if (compilation.GetDeclaredSymbol(@class) is not INamedTypeSymbol classSymbol)
 			{
 				continue;
 			}
@@ -122,6 +120,7 @@ public partial class ServiceProviderGenerator : IIncrementalGenerator
 			try
 			{
 				string registrationMethods = CreateRegistrationMethods(classSymbol, isStatic: isModule);
+
 				SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(
 					registrationMethods,
 					CSharpParseOptions.Default.WithLanguageVersion(((CSharpCompilation)compilation).LanguageVersion));
@@ -155,9 +154,7 @@ public partial class ServiceProviderGenerator : IIncrementalGenerator
 				continue;
 			}
 
-			INamedTypeSymbol? classSymbol = compilation.GetSemanticModel(@class.SyntaxTree).GetDeclaredSymbol(@class);
-
-			if (classSymbol == null)
+			if (compilation.GetDeclaredSymbol(@class) is not INamedTypeSymbol classSymbol)
 			{
 				continue;
 			}

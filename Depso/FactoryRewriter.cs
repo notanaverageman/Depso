@@ -23,13 +23,14 @@ public class FactoryRewriter : CSharpSyntaxRewriter
 	public override SyntaxNode? VisitSimpleLambdaExpression(SimpleLambdaExpressionSyntax node)
 	{
 		// We need the symbol to find the parameter and replace all references to it in the body.
-		SemanticModel semanticModel = Compilation.GetSemanticModel(node.SyntaxTree);
-		ISymbol? symbol = semanticModel.GetDeclaredSymbol(node.Parameter);
+		ISymbol? symbol = Compilation.GetDeclaredSymbol(node.Parameter);
 
 		if (symbol == null)
 		{
 			return base.VisitSimpleLambdaExpression(node);
 		}
+
+		SemanticModel semanticModel = Compilation.GetSemanticModel(node.SyntaxTree);
 
 		IOperation? operation = semanticModel.GetOperation(node.Body);
 		ParameterReferenceFinder parameterReferenceFinder = new(symbol);
@@ -228,12 +229,7 @@ public class FactoryRewriter : CSharpSyntaxRewriter
 
 	private ISymbol? GetSymbol(SyntaxNode node)
 	{
-		SymbolInfo symbolInfo = Compilation.ContainsSyntaxTree(node.SyntaxTree)
-		? Compilation
-				.GetSemanticModel(node.SyntaxTree)
-				.GetSymbolInfo(node)
-			: new SymbolInfo();
-
+		SymbolInfo symbolInfo = Compilation.GetSymbolInfo(node);
 		return symbolInfo.Symbol;
 	}
 

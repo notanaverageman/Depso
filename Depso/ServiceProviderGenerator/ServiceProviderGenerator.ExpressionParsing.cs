@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -105,9 +105,7 @@ public partial class ServiceProviderGenerator
 		}
 
 		TypeSyntax moduleTypeSyntax = generic.TypeArgumentList.Arguments[0];
-
-		ISymbol? moduleTypeSymbol = ModelExtensions.GetSymbolInfo(generationContext.Compilation
-				.GetSemanticModel(moduleTypeSyntax.SyntaxTree), moduleTypeSyntax).Symbol;
+		ISymbol? moduleTypeSymbol = generationContext.Compilation.GetSymbolInfo(moduleTypeSyntax).Symbol;
 
 		if (moduleTypeSymbol is not INamedTypeSymbol moduleType)
 		{
@@ -120,9 +118,7 @@ public partial class ServiceProviderGenerator
 
 	private static void ImportModule(GenerationContext generationContext, TypeSyntax typeSyntax)
 	{
-		ITypeSymbol? moduleTypeSymbol = ModelExtensions.GetTypeInfo(
-			generationContext.Compilation.GetSemanticModel(typeSyntax.SyntaxTree),
-			typeSyntax).Type;
+		ITypeSymbol? moduleTypeSymbol = generationContext.Compilation.GetTypeInfo(typeSyntax).Type;
 
 		if (moduleTypeSymbol is not INamedTypeSymbol moduleType)
 		{
@@ -279,8 +275,7 @@ public partial class ServiceProviderGenerator
 
 		void ProcessAlsoAs(TypeSyntax typeSyntax)
 		{
-			TypeInfo typeInfo = ModelExtensions.GetTypeInfo(generationContext.Compilation
-					.GetSemanticModel(typeSyntax.SyntaxTree), typeSyntax);
+			TypeInfo typeInfo = generationContext.Compilation.GetTypeInfo(typeSyntax);
 
 			if (typeInfo.Type is INamedTypeSymbol typeSymbol)
 			{
@@ -341,7 +336,7 @@ public partial class ServiceProviderGenerator
 			ReportIllegalStatementDiagnostic(generationContext, generic);
 			return;
 		}
-
+		
 		SeparatedSyntaxList<TypeSyntax> typeArguments = generic.TypeArgumentList.Arguments;
 
 		if (typeArguments.Count == 1)
@@ -389,9 +384,7 @@ public partial class ServiceProviderGenerator
 
 		INamedTypeSymbol? GetSymbol(TypeSyntax typeSyntax)
 		{
-			TypeInfo typeInfo = ModelExtensions.GetTypeInfo(generationContext.Compilation
-					.GetSemanticModel(typeSyntax.SyntaxTree), typeSyntax);
-
+			TypeInfo typeInfo = generationContext.Compilation.GetTypeInfo(typeSyntax);
 			return typeInfo.Type as INamedTypeSymbol;
 		}
 	}
@@ -513,9 +506,7 @@ public partial class ServiceProviderGenerator
 
 		INamedTypeSymbol? GetSymbol(TypeSyntax typeSyntax)
 		{
-			TypeInfo typeInfo = ModelExtensions.GetTypeInfo(generationContext.Compilation
-					.GetSemanticModel(typeSyntax.SyntaxTree), typeSyntax);
-
+			TypeInfo typeInfo = generationContext.Compilation.GetTypeInfo(typeSyntax);
 			return typeInfo.Type as INamedTypeSymbol;
 		}
 	}
@@ -526,11 +517,7 @@ public partial class ServiceProviderGenerator
 		GenerationContext generationContext,
 		MemberAccessContext memberAccessContext)
 	{
-		SymbolInfo symbolInfo = generationContext.Compilation
-			.GetSemanticModel(syntaxNode.SyntaxTree)
-			.GetSymbolInfo(syntaxNode);
-
-		ISymbol? symbol = symbolInfo.Symbol;
+		ISymbol? symbol = generationContext.Compilation.GetSymbolInfo(syntaxNode).Symbol;
 
 		if (HandleFuncMethod(syntaxNode, symbol, lifetime, generationContext, memberAccessContext))
 		{

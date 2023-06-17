@@ -5,6 +5,33 @@ namespace Depso;
 
 public static class SymbolExtensions
 {
+	public static SymbolInfo GetSymbolInfo(this Compilation compilation, SyntaxNode syntaxNode)
+	{
+		return compilation.ContainsSyntaxTree(syntaxNode.SyntaxTree)
+			? compilation
+				.GetSemanticModel(syntaxNode.SyntaxTree)
+				.GetSymbolInfo(syntaxNode)
+			: default;
+	}
+
+	public static TypeInfo GetTypeInfo(this Compilation compilation, SyntaxNode syntaxNode)
+	{
+		return compilation.ContainsSyntaxTree(syntaxNode.SyntaxTree)
+			? compilation
+				.GetSemanticModel(syntaxNode.SyntaxTree)
+				.GetTypeInfo(syntaxNode)
+			: default;
+	}
+
+	public static ISymbol? GetDeclaredSymbol(this Compilation compilation, SyntaxNode syntaxNode)
+	{
+		return compilation.ContainsSyntaxTree(syntaxNode.SyntaxTree)
+			? compilation
+				.GetSemanticModel(syntaxNode.SyntaxTree)
+				.GetDeclaredSymbol(syntaxNode)
+			: null;
+	}
+
 	public static bool SymbolEquals(this ISymbol? symbol, ISymbol? other)
 	{
 		return SymbolEqualityComparer.Default.Equals(symbol, other);
