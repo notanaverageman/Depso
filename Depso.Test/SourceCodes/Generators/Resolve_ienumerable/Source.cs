@@ -37,5 +37,6 @@ public partial class Provider
         AddSingleton<Dependency4>();
         AddScoped<Dependency5>();
         AddTransient<Dependency6>();
+        AddTransient<Dependency6>();
     }
 }

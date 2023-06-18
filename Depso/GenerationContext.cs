@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -96,7 +96,7 @@ public class GenerationContext
 		INamedTypeSymbol service = serviceDescriptor.ServiceType;
 		INamedTypeSymbol? implementation = serviceDescriptor.ImplementationType;
 		INamedTypeSymbol concreteType = implementation ?? service;
-
+		
 		_serviceDescriptors.Add(serviceDescriptor);
 		_serviceDescriptorCache.Add(serviceDescriptor);
 

@@ -32,16 +32,20 @@ public partial class Provider
 
         public object? GetService(global::System.Type serviceType)
         {
-            if (serviceType == typeof(global::Interface1)) return CreateService1AddDisposable();
-            if (serviceType == typeof(global::Service1)) return CreateService1AddDisposable();
-            if (serviceType == typeof(global::InterfaceA)) return CreateService1AddDisposable();
-            if (serviceType == typeof(global::Service2)) return CreateService2AddDisposable();
-            if (serviceType == typeof(global::InterfaceB)) return CreateService2AddDisposable();
-            if (serviceType == typeof(global::Interface2)) return CreateService2AddDisposable();
-            if (serviceType == typeof(global::Service3)) return _root.CreateService3();
-            if (serviceType == typeof(global::Interface3)) return _root.CreateService3();
-            if (serviceType == typeof(global::Service4)) return _root.CreateService4();
-            if (serviceType == typeof(global::Interface4)) return _root.CreateService4();
+            if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory)) return _root.GetService(serviceType);
+            if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceProviderIsService)) return _root.GetService(serviceType);
+            if (serviceType == typeof(global::System.IServiceProvider)) return this;
+            if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScope)) return this;
+            if (serviceType == typeof(global::Interface1)) return CreateService1_0AddDisposable();
+            if (serviceType == typeof(global::Service1)) return CreateService1_0AddDisposable();
+            if (serviceType == typeof(global::InterfaceA)) return CreateService1_0AddDisposable();
+            if (serviceType == typeof(global::Service2)) return CreateService2_0AddDisposable();
+            if (serviceType == typeof(global::InterfaceB)) return CreateService2_0AddDisposable();
+            if (serviceType == typeof(global::Interface2)) return CreateService2_0AddDisposable();
+            if (serviceType == typeof(global::Service3)) return _root.CreateService3_0();
+            if (serviceType == typeof(global::Interface3)) return _root.CreateService3_0();
+            if (serviceType == typeof(global::Service4)) return _root.CreateService4_0();
+            if (serviceType == typeof(global::Interface4)) return _root.CreateService4_0();
 
             return null;
         }
@@ -51,17 +55,17 @@ public partial class Provider
             return (T)GetService(typeof(T))!;
         }
 
-        private global::Service1 CreateService1AddDisposable()
+        private global::Service1 CreateService1_0AddDisposable()
         {
-            global::Service1 service = _root.CreateService1();
+            global::Service1 service = _root.CreateService1_0();
             AddDisposable(service);
 
             return service;
         }
 
-        private global::Service2 CreateService2AddDisposable()
+        private global::Service2 CreateService2_0AddDisposable()
         {
-            global::Service2 service = _root.CreateService2();
+            global::Service2 service = _root.CreateService2_0();
             AddAsyncDisposable(service);
 
             return service;

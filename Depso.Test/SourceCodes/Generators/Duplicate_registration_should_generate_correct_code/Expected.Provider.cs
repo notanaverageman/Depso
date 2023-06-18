@@ -18,51 +18,54 @@ public partial class Provider
     private bool _isDisposed;
 
     private global::Service1? _service1_0;
-    private global::Service1 Service1_0 => _service1_0 ??= CreateService1();
+    private global::Service1 Service1_0 => _service1_0 ??= CreateService1_0();
 
     private global::Service1? _service1_1;
-    private global::Service1 Service1_1 => _service1_1 ??= CreateService1();
+    private global::Service1 Service1_1 => _service1_1 ??= CreateService1_0();
 
     private global::Service2? _service2_0;
-    private global::Service2 Service2_0 => _service2_0 ??= CreateService2();
+    private global::Service2 Service2_0 => _service2_0 ??= CreateService2_0();
 
     private global::Service2? _service2_1;
-    private global::Service2 Service2_1 => _service2_1 ??= CreateService2();
+    private global::Service2 Service2_1 => _service2_1 ??= CreateService2_0();
 
     private global::Service3? _service3_0;
-    private global::Service3 Service3_0 => _service3_0 ??= CreateService3();
+    private global::Service3 Service3_0 => _service3_0 ??= CreateService3_0();
 
     private global::Dependency1? _dependency1_0;
-    private global::Dependency1 Dependency1_0 => _dependency1_0 ??= CreateDependency1();
+    private global::Dependency1 Dependency1_0 => _dependency1_0 ??= CreateDependency1_0();
 
     private global::Dependency1? _dependency1_1;
-    private global::Dependency1 Dependency1_1 => _dependency1_1 ??= CreateDependency1();
+    private global::Dependency1 Dependency1_1 => _dependency1_1 ??= CreateDependency1_0();
 
     private global::Dependency1? _dependency1_2;
-    private global::Dependency1 Dependency1_2 => _dependency1_2 ??= CreateDependency1();
+    private global::Dependency1 Dependency1_2 => _dependency1_2 ??= CreateDependency1_0();
 
     private global::Dependency2? _dependency2_0;
-    private global::Dependency2 Dependency2_0 => _dependency2_0 ??= CreateDependency2();
+    private global::Dependency2 Dependency2_0 => _dependency2_0 ??= CreateDependency2_0();
 
     private global::Dependency2? _dependency2_1;
-    private global::Dependency2 Dependency2_1 => _dependency2_1 ??= CreateDependency2();
+    private global::Dependency2 Dependency2_1 => _dependency2_1 ??= CreateDependency2_0();
 
     private global::Dependency3? _dependency3_0;
-    private global::Dependency3 Dependency3_0 => _dependency3_0 ??= CreateDependency3();
+    private global::Dependency3 Dependency3_0 => _dependency3_0 ??= CreateDependency3_0();
 
     private global::Dependency3? _dependency3_1;
-    private global::Dependency3 Dependency3_1 => _dependency3_1 ??= CreateDependency3();
+    private global::Dependency3 Dependency3_1 => _dependency3_1 ??= CreateDependency3_0();
 
     private global::Dependency4? _dependency4_0;
-    private global::Dependency4 Dependency4_0 => _dependency4_0 ??= CreateDependency4();
+    private global::Dependency4 Dependency4_0 => _dependency4_0 ??= CreateDependency4_0();
 
     private global::Dependency4? _dependency4_1;
-    private global::Dependency4 Dependency4_1 => _dependency4_1 ??= CreateDependency4();
+    private global::Dependency4 Dependency4_1 => _dependency4_1 ??= CreateDependency4_0();
 
     global::Microsoft.Extensions.DependencyInjection.IServiceScope global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory.CreateScope() => this.CreateScope(_sync);
 
     public object? GetService(global::System.Type serviceType)
     {
+        if (serviceType == typeof(global::System.IServiceProvider)) return this;
+        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory)) return this;
+        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceProviderIsService)) return this;
         if (serviceType == typeof(global::Service1)) return Service1_1;
         if (serviceType == typeof(global::Service2)) return Service3_0;
         if (serviceType == typeof(global::Service3)) return Service3_0;
@@ -73,6 +76,7 @@ public partial class Provider
         if (serviceType == typeof(global::Dependency3)) return Dependency3_0;
         if (serviceType == typeof(global::Interface3)) return Dependency4_0;
         if (serviceType == typeof(global::Interface4)) return Dependency4_1;
+        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScope)) return RootScope.GetService(serviceType);
 
         return null;
     }
@@ -82,7 +86,7 @@ public partial class Provider
         return (T)GetService(typeof(T))!;
     }
 
-    private global::Service1 CreateService1()
+    private global::Service1 CreateService1_0()
     {
         lock (_sync)
         {
@@ -96,7 +100,7 @@ public partial class Provider
         }
     }
 
-    private global::Service2 CreateService2()
+    private global::Service2 CreateService2_0()
     {
         lock (_sync)
         {
@@ -111,7 +115,7 @@ public partial class Provider
         }
     }
 
-    private global::Service3 CreateService3()
+    private global::Service3 CreateService3_0()
     {
         lock (_sync)
         {
@@ -126,7 +130,7 @@ public partial class Provider
         }
     }
 
-    private global::Dependency1 CreateDependency1()
+    private global::Dependency1 CreateDependency1_0()
     {
         lock (_sync)
         {
@@ -135,7 +139,7 @@ public partial class Provider
         }
     }
 
-    private global::Dependency2 CreateDependency2()
+    private global::Dependency2 CreateDependency2_0()
     {
         lock (_sync)
         {
@@ -144,7 +148,7 @@ public partial class Provider
         }
     }
 
-    private global::Dependency3 CreateDependency3()
+    private global::Dependency3 CreateDependency3_0()
     {
         lock (_sync)
         {
@@ -153,7 +157,7 @@ public partial class Provider
         }
     }
 
-    private global::Dependency4 CreateDependency4()
+    private global::Dependency4 CreateDependency4_0()
     {
         lock (_sync)
         {
@@ -183,9 +187,13 @@ public partial class Provider
             || serviceType == typeof(global::Interface2)
             || serviceType == typeof(global::Interface3)
             || serviceType == typeof(global::Interface4)
+            || serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceProviderIsService)
+            || serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScope)
+            || serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory)
             || serviceType == typeof(global::Service1)
             || serviceType == typeof(global::Service2)
-            || serviceType == typeof(global::Service3);
+            || serviceType == typeof(global::Service3)
+            || serviceType == typeof(global::System.IServiceProvider);
     }
 
     public void Dispose()

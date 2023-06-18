@@ -9,6 +9,11 @@ public class SingletonGetServicesGenerator : Generators.SingletonGetServicesGene
 		GenerationContext generationContext,
 		INamedTypeSymbol serviceType)
 	{
+		if (serviceType.SymbolEquals(generationContext.KnownTypes.IServiceProvider))
+		{
+			return;
+		}
+
 		CodeBuilder codeBuilder = generationContext.CodeBuilder;
 
 		string typeName = serviceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);

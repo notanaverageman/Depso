@@ -24,7 +24,6 @@ public class ScopedGetServicesGenerator : Generators.ScopedGetServicesGenerator
 		if (serviceDescriptor.RedirectToThis)
 		{
 			codeBuilder.AppendLine($"if (serviceType == typeof({typeName})) return this;");
-
 		}
 		else
 		{

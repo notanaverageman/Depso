@@ -57,6 +57,10 @@ public partial class Provider
 
         public object? GetService(global::System.Type serviceType)
         {
+            if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory)) return _root.GetService(serviceType);
+            if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceProviderIsService)) return _root.GetService(serviceType);
+            if (serviceType == typeof(global::System.IServiceProvider)) return this;
+            if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScope)) return this;
             if (serviceType == typeof(global::Service1)) return Service1_0;
             if (serviceType == typeof(global::InterfaceA)) return Service1_0;
             if (serviceType == typeof(global::Interface1)) return Service1_0;
@@ -169,8 +173,8 @@ public partial class Provider
                 _isDisposed = true;
             }
 
-            if (_interfaceA_0 != null) _interfaceA_0.Dispose();
             if (_service1_0 != null) _service1_0.Dispose();
+            if (_interfaceA_0 != null) _interfaceA_0.Dispose();
         }
 
         public async global::System.Threading.Tasks.ValueTask DisposeAsync()
@@ -185,11 +189,11 @@ public partial class Provider
                 _isDisposed = true;
             }
 
+            if (_service1_0 != null) _service1_0.Dispose();
             if (_interfaceA_0 != null) _interfaceA_0.Dispose();
             if (_service2_0 != null) await _service2_0.DisposeAsync();
             if (_service2_1 != null) await _service2_1.DisposeAsync();
             if (_service2_2 != null) await _service2_2.DisposeAsync();
-            if (_service1_0 != null) _service1_0.Dispose();
         }
 
         private void ThrowIfDisposed()

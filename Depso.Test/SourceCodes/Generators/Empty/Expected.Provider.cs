@@ -21,6 +21,11 @@ public partial class Provider
 
     public object? GetService(global::System.Type serviceType)
     {
+        if (serviceType == typeof(global::System.IServiceProvider)) return this;
+        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory)) return this;
+        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceProviderIsService)) return this;
+        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScope)) return RootScope.GetService(serviceType);
+
         return null;
     }
 
@@ -37,7 +42,16 @@ public partial class Provider
 
     public bool IsService(global::System.Type serviceType)
     {
-        return false;
+        if (serviceType.IsGenericType && serviceType.GetGenericTypeDefinition() == typeof(global::System.Collections.Generic.IEnumerable<>))
+        {
+            serviceType = serviceType.GetGenericArguments()[0];
+        }
+
+        return false
+            || serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceProviderIsService)
+            || serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScope)
+            || serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory)
+            || serviceType == typeof(global::System.IServiceProvider);
     }
 
     public void Dispose()

@@ -21,6 +21,10 @@ public partial class Provider
 
     public object? GetService(global::System.Type serviceType)
     {
+        if (serviceType == typeof(global::System.IServiceProvider)) return this;
+        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory)) return this;
+        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceProviderIsService)) return this;
+        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScope)) return RootScope.GetService(serviceType);
         if (serviceType == typeof(global::Interface1)) return RootScope.GetService(serviceType);
         if (serviceType == typeof(global::Service1)) return RootScope.GetService(serviceType);
         if (serviceType == typeof(global::InterfaceA)) return RootScope.GetService(serviceType);
@@ -54,8 +58,12 @@ public partial class Provider
             || serviceType == typeof(global::Interface2)
             || serviceType == typeof(global::InterfaceA)
             || serviceType == typeof(global::InterfaceB)
+            || serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceProviderIsService)
+            || serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScope)
+            || serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory)
             || serviceType == typeof(global::Service1)
-            || serviceType == typeof(global::Service2);
+            || serviceType == typeof(global::Service2)
+            || serviceType == typeof(global::System.IServiceProvider);
     }
 
     public void Dispose()

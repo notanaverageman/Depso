@@ -228,7 +228,11 @@ public partial class ServiceProviderGenerator
 
 		SyntaxNode? factorySyntax = factoryMethod == null
 			? null
-			: CSharpSyntaxTree.ParseText(factoryMethod).GetRoot();
+			: CSharpSyntaxTree
+				.ParseText(
+					factoryMethod,
+					CSharpParseOptions.Default.WithLanguageVersion(((CSharpCompilation)generationContext.Compilation).LanguageVersion))
+				.GetRoot();
 
 		generationContext.AddServiceDescriptor(new ServiceDescriptor(
 			lifetime.Value,

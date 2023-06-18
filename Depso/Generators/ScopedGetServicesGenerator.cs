@@ -20,6 +20,12 @@ public class ScopedGetServicesGenerator : IGenerator
 
 			INamedTypeSymbol serviceType = serviceDescriptor.ServiceType;
 
+			if (serviceDescriptor.RedirectToThis && generationContext.IsScopeClass)
+			{
+				generationContext.GetServicesActions.Add(x => ProcessType(x, serviceDescriptor, serviceType));
+				continue;
+			}
+
 			if (processedTypes.Add(serviceType))
 			{
 				generationContext.GetServicesActions.Add(x => ProcessType(x, serviceDescriptor, serviceType));

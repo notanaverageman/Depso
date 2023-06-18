@@ -11,7 +11,7 @@ public record struct Index(int Field, int CreateMethod);
 [DebuggerDisplay("{GetDebuggerDisplay()}")]
 public class ServiceDescriptor
 {
-	private readonly Dictionary<ITypeSymbol, Index> _indices;
+	private readonly Dictionary<ITypeSymbol, Index> _indexes;
 
 	public Lifetime Lifetime { get; init; }
 	public INamedTypeSymbol ServiceType { get; init; }
@@ -35,19 +35,19 @@ public class ServiceDescriptor
 		Factory = factory;
 		AlsoRegisterAs = alsoRegisterAs;
 
-		_indices = new Dictionary<ITypeSymbol, Index>(SymbolEqualityComparer.Default);
+		_indexes = new Dictionary<ITypeSymbol, Index>(SymbolEqualityComparer.Default);
 	}
 
 	public void SetIndexes(Index index)
 	{
 		if (ImplementationType != null)
 		{
-			_indices[ImplementationType] = index;
-			_indices[ServiceType] = index with { CreateMethod = -1 };
+			_indexes[ImplementationType] = index;
+			_indexes[ServiceType] = index;
 		}
 		else
 		{
-			_indices[ServiceType] = index;
+			_indexes[ServiceType] = index;
 		}
 
 		if (AlsoRegisterAs == null)
@@ -64,18 +64,18 @@ public class ServiceDescriptor
 
 			if (Lifetime == Lifetime.Transient)
 			{
-				_indices[alsoRegisterAs] = index;
+				_indexes[alsoRegisterAs] = index;
 			}
 			else
 			{
-				_indices[alsoRegisterAs] = index with { CreateMethod = -1 };
+				_indexes[alsoRegisterAs] = index with { CreateMethod = -1 };
 			}
 		}
 	}
 	
 	public string GetFieldName()
 	{
-		ITypeSymbol symbol = ImplementationType ?? ServiceType;
+		ITypeSymbol symbol = ConcreteType;
 
 		string genericSuffix = "";
 
@@ -87,8 +87,8 @@ public class ServiceDescriptor
 		string result = $"_{symbol.Name.ToCamelCase()}{genericSuffix}";
 		
 		int index = Lifetime == Lifetime.Transient
-			? _indices[symbol].CreateMethod
-			: _indices[symbol].Field;
+			? _indexes[symbol].CreateMethod
+			: _indexes[symbol].Field;
 
 		return $"{result}_{index}";
 	}
@@ -97,11 +97,19 @@ public class ServiceDescriptor
 	{
 		if (Factory != null)
 		{
-			throw new InvalidOperationException("Trying to create createX method when Factory is not null.");
+			throw new InvalidOperationException("Trying to create Create method when Factory is not null.");
 		}
-		
-		string propertyName = GetFieldName().ToPropertyName();
-		return $"Create{propertyName}";
+
+		ITypeSymbol symbol = ConcreteType;
+
+		string genericSuffix = "";
+
+		if (symbol is INamedTypeSymbol { IsGenericType: true } namedType)
+		{
+			genericSuffix = namedType.Arity.ToString();
+		}
+
+		return $"Create{symbol.Name}{genericSuffix}_{_indexes[symbol].CreateMethod}";
 	}
 
 	public string GetFactoryMethodName()

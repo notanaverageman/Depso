@@ -20,39 +20,43 @@ public partial class Provider
     private global::System.Collections.Generic.List<global::System.IAsyncDisposable>? _transientAsyncDisposables;
 
     private global::Singleton1? _singleton1_0;
-    private global::Singleton1 Singleton1_0 => _singleton1_0 ??= CreateSingleton1();
+    private global::Singleton1 Singleton1_0 => _singleton1_0 ??= CreateSingleton1_0();
 
     private global::Singleton2? _singleton2_0;
-    private global::Singleton2 Singleton2_0 => _singleton2_0 ??= CreateSingleton2();
+    private global::Singleton2 Singleton2_0 => _singleton2_0 ??= CreateSingleton2_0();
 
     private global::Singleton3? _singleton3_0;
-    private global::Singleton3 Singleton3_0 => _singleton3_0 ??= CreateSingleton3();
+    private global::Singleton3 Singleton3_0 => _singleton3_0 ??= CreateSingleton3_0();
 
     private global::Singleton4? _singleton4_0;
-    private global::Singleton4 Singleton4_0 => _singleton4_0 ??= CreateSingleton4();
+    private global::Singleton4 Singleton4_0 => _singleton4_0 ??= CreateSingleton4_0();
 
     global::Microsoft.Extensions.DependencyInjection.IServiceScope global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory.CreateScope() => this.CreateScope(_sync);
 
     public object? GetService(global::System.Type serviceType)
     {
+        if (serviceType == typeof(global::System.IServiceProvider)) return this;
+        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory)) return this;
+        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceProviderIsService)) return this;
         if (serviceType == typeof(global::Singleton1)) return Singleton1_0;
         if (serviceType == typeof(global::SingletonInterface1)) return Singleton1_0;
         if (serviceType == typeof(global::Singleton2)) return Singleton2_0;
         if (serviceType == typeof(global::SingletonInterface2)) return Singleton2_0;
         if (serviceType == typeof(global::Singleton3)) return Singleton3_0;
         if (serviceType == typeof(global::Singleton4)) return Singleton4_0;
+        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScope)) return RootScope.GetService(serviceType);
         if (serviceType == typeof(global::Scoped1)) return RootScope.GetService(serviceType);
         if (serviceType == typeof(global::ScopedInterface1)) return RootScope.GetService(serviceType);
         if (serviceType == typeof(global::Scoped2)) return RootScope.GetService(serviceType);
         if (serviceType == typeof(global::ScopedInterface2)) return RootScope.GetService(serviceType);
         if (serviceType == typeof(global::Scoped3)) return RootScope.GetService(serviceType);
         if (serviceType == typeof(global::Scoped4)) return RootScope.GetService(serviceType);
-        if (serviceType == typeof(global::Transient1)) return CreateTransient1AddDisposable();
-        if (serviceType == typeof(global::TransientInterface1)) return CreateTransient1AddDisposable();
-        if (serviceType == typeof(global::Transient2)) return CreateTransient2AddDisposable();
-        if (serviceType == typeof(global::TransientInterface2)) return CreateTransient2AddDisposable();
-        if (serviceType == typeof(global::Transient3)) return CreateTransient3AddDisposable();
-        if (serviceType == typeof(global::Transient4)) return CreateTransient4AddDisposable();
+        if (serviceType == typeof(global::Transient1)) return CreateTransient1_0AddDisposable();
+        if (serviceType == typeof(global::TransientInterface1)) return CreateTransient1_0AddDisposable();
+        if (serviceType == typeof(global::Transient2)) return CreateTransient2_0AddDisposable();
+        if (serviceType == typeof(global::TransientInterface2)) return CreateTransient2_0AddDisposable();
+        if (serviceType == typeof(global::Transient3)) return CreateTransient3_0AddDisposable();
+        if (serviceType == typeof(global::Transient4)) return CreateTransient4_0AddDisposable();
 
         return null;
     }
@@ -62,7 +66,7 @@ public partial class Provider
         return (T)GetService(typeof(T))!;
     }
 
-    private global::Singleton1 CreateSingleton1()
+    private global::Singleton1 CreateSingleton1_0()
     {
         lock (_sync)
         {
@@ -71,7 +75,7 @@ public partial class Provider
         }
     }
 
-    private global::Singleton2 CreateSingleton2()
+    private global::Singleton2 CreateSingleton2_0()
     {
         lock (_sync)
         {
@@ -80,7 +84,7 @@ public partial class Provider
         }
     }
 
-    private global::Singleton3 CreateSingleton3()
+    private global::Singleton3 CreateSingleton3_0()
     {
         lock (_sync)
         {
@@ -93,7 +97,7 @@ public partial class Provider
         }
     }
 
-    private global::Singleton4 CreateSingleton4()
+    private global::Singleton4 CreateSingleton4_0()
     {
         lock (_sync)
         {
@@ -102,7 +106,7 @@ public partial class Provider
         }
     }
 
-    private global::Transient1 CreateTransient1()
+    private global::Transient1 CreateTransient1_0()
     {
         lock (_sync)
         {
@@ -111,15 +115,15 @@ public partial class Provider
         }
     }
 
-    private global::Transient1 CreateTransient1AddDisposable()
+    private global::Transient1 CreateTransient1_0AddDisposable()
     {
-        global::Transient1 service = CreateTransient1();
+        global::Transient1 service = CreateTransient1_0();
         AddDisposable(service);
 
         return service;
     }
 
-    private global::Transient2 CreateTransient2()
+    private global::Transient2 CreateTransient2_0()
     {
         lock (_sync)
         {
@@ -128,15 +132,15 @@ public partial class Provider
         }
     }
 
-    private global::Transient2 CreateTransient2AddDisposable()
+    private global::Transient2 CreateTransient2_0AddDisposable()
     {
-        global::Transient2 service = CreateTransient2();
+        global::Transient2 service = CreateTransient2_0();
         AddAsyncDisposable(service);
 
         return service;
     }
 
-    private global::Transient3 CreateTransient3()
+    private global::Transient3 CreateTransient3_0()
     {
         lock (_sync)
         {
@@ -149,15 +153,15 @@ public partial class Provider
         }
     }
 
-    private global::Transient3 CreateTransient3AddDisposable()
+    private global::Transient3 CreateTransient3_0AddDisposable()
     {
-        global::Transient3 service = CreateTransient3();
+        global::Transient3 service = CreateTransient3_0();
         AddDisposable(service);
 
         return service;
     }
 
-    private global::Transient4 CreateTransient4()
+    private global::Transient4 CreateTransient4_0()
     {
         lock (_sync)
         {
@@ -166,9 +170,9 @@ public partial class Provider
         }
     }
 
-    private global::Transient4 CreateTransient4AddDisposable()
+    private global::Transient4 CreateTransient4_0AddDisposable()
     {
-        global::Transient4 service = CreateTransient4();
+        global::Transient4 service = CreateTransient4_0();
         AddAsyncDisposable(service);
 
         return service;
@@ -188,6 +192,9 @@ public partial class Provider
         }
 
         return false
+            || serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceProviderIsService)
+            || serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScope)
+            || serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory)
             || serviceType == typeof(global::Scoped1)
             || serviceType == typeof(global::Scoped2)
             || serviceType == typeof(global::Scoped3)
@@ -200,6 +207,7 @@ public partial class Provider
             || serviceType == typeof(global::Singleton4)
             || serviceType == typeof(global::SingletonInterface1)
             || serviceType == typeof(global::SingletonInterface2)
+            || serviceType == typeof(global::System.IServiceProvider)
             || serviceType == typeof(global::Transient1)
             || serviceType == typeof(global::Transient2)
             || serviceType == typeof(global::Transient3)

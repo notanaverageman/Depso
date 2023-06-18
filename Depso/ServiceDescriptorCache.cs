@@ -51,10 +51,15 @@ public class ServiceDescriptorCache
 
 		implementationDescriptors.Add(serviceDescriptor);
 	}
-
+	
 	public IReadOnlyList<ServiceDescriptor> GetDescriptorsForService(ITypeSymbol type)
 	{
-		return _serviceCache[type];
+		if (_serviceCache.TryGetValue(type, out List<ServiceDescriptor>? descriptors))
+		{
+			return descriptors;
+		}
+
+		return Array.Empty<ServiceDescriptor>();
 	}
 
 	public IReadOnlyList<ServiceDescriptor> GetDescriptorsForImplementation(ITypeSymbol type)

@@ -18,28 +18,28 @@ public partial class Provider
     private bool _isDisposed;
 
     private global::Test.Nested.Singleton1? _singleton1_0;
-    private global::Test.Nested.Singleton1 Singleton1_0 => _singleton1_0 ??= CreateSingleton1();
+    private global::Test.Nested.Singleton1 Singleton1_0 => _singleton1_0 ??= CreateSingleton1_0();
 
     private global::Test.Nested.Singleton2? _singleton2_0;
-    private global::Test.Nested.Singleton2 Singleton2_0 => _singleton2_0 ??= CreateSingleton2();
+    private global::Test.Nested.Singleton2 Singleton2_0 => _singleton2_0 ??= CreateSingleton2_0();
 
     private global::Test.Nested.Singleton4? _singleton4_0;
-    private global::Test.Nested.Singleton4 Singleton4_0 => _singleton4_0 ??= CreateSingleton4();
+    private global::Test.Nested.Singleton4 Singleton4_0 => _singleton4_0 ??= CreateSingleton4_0();
 
     private global::Test.Nested.Singleton5? _singleton5_0;
-    private global::Test.Nested.Singleton5 Singleton5_0 => _singleton5_0 ??= CreateSingleton5();
+    private global::Test.Nested.Singleton5 Singleton5_0 => _singleton5_0 ??= CreateSingleton5_0();
 
     private global::ExternalSingleton1? _externalSingleton1_0;
-    private global::ExternalSingleton1 ExternalSingleton1_0 => _externalSingleton1_0 ??= CreateExternalSingleton1();
+    private global::ExternalSingleton1 ExternalSingleton1_0 => _externalSingleton1_0 ??= CreateExternalSingleton1_0();
 
     private global::ExternalSingleton2? _externalSingleton2_0;
-    private global::ExternalSingleton2 ExternalSingleton2_0 => _externalSingleton2_0 ??= CreateExternalSingleton2();
+    private global::ExternalSingleton2 ExternalSingleton2_0 => _externalSingleton2_0 ??= CreateExternalSingleton2_0();
 
     private global::ExternalSingleton4? _externalSingleton4_0;
-    private global::ExternalSingleton4 ExternalSingleton4_0 => _externalSingleton4_0 ??= CreateExternalSingleton4();
+    private global::ExternalSingleton4 ExternalSingleton4_0 => _externalSingleton4_0 ??= CreateExternalSingleton4_0();
 
     private global::ExternalSingleton5? _externalSingleton5_0;
-    private global::ExternalSingleton5 ExternalSingleton5_0 => _externalSingleton5_0 ??= CreateExternalSingleton5();
+    private global::ExternalSingleton5 ExternalSingleton5_0 => _externalSingleton5_0 ??= CreateExternalSingleton5_0();
 
     private global::Test.Nested.Singleton3? _singleton3_0;
     private global::Test.Nested.Singleton3 Singleton3_0 => _singleton3_0 ??= FactorySingleton3_0();
@@ -57,6 +57,9 @@ public partial class Provider
 
     public object? GetService(global::System.Type serviceType)
     {
+        if (serviceType == typeof(global::System.IServiceProvider)) return this;
+        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory)) return this;
+        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceProviderIsService)) return this;
         if (serviceType == typeof(global::Test.Nested.Singleton1)) return Singleton1_0;
         if (serviceType == typeof(global::Test.Nested.SingletonInterface1)) return Singleton2_0;
         if (serviceType == typeof(global::Test.Nested.Singleton2)) return Singleton2_0;
@@ -75,6 +78,7 @@ public partial class Provider
         if (serviceType == typeof(global::ExternalSingleton4)) return ExternalSingleton4_0;
         if (serviceType == typeof(global::ExternalSingletonInterface5)) return ExternalSingleton5_0;
         if (serviceType == typeof(global::ExternalSingletonInterface6)) return ExternalSingletonInterface6_0;
+        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScope)) return RootScope.GetService(serviceType);
         if (serviceType == typeof(global::Test.Nested.Scoped1)) return RootScope.GetService(serviceType);
         if (serviceType == typeof(global::Test.Nested.ScopedInterface1)) return RootScope.GetService(serviceType);
         if (serviceType == typeof(global::Test.Nested.Scoped2)) return RootScope.GetService(serviceType);
@@ -93,23 +97,23 @@ public partial class Provider
         if (serviceType == typeof(global::ExternalScoped4)) return RootScope.GetService(serviceType);
         if (serviceType == typeof(global::ExternalScopedInterface5)) return RootScope.GetService(serviceType);
         if (serviceType == typeof(global::ExternalScopedInterface6)) return RootScope.GetService(serviceType);
-        if (serviceType == typeof(global::Test.Nested.Transient1)) return CreateTransient1();
-        if (serviceType == typeof(global::Test.Nested.TransientInterface1)) return CreateTransient2();
-        if (serviceType == typeof(global::Test.Nested.Transient2)) return CreateTransient2();
-        if (serviceType == typeof(global::Test.Nested.TransientInterface2)) return CreateTransient2();
+        if (serviceType == typeof(global::Test.Nested.Transient1)) return CreateTransient1_0();
+        if (serviceType == typeof(global::Test.Nested.TransientInterface1)) return CreateTransient2_0();
+        if (serviceType == typeof(global::Test.Nested.Transient2)) return CreateTransient2_0();
+        if (serviceType == typeof(global::Test.Nested.TransientInterface2)) return CreateTransient2_0();
         if (serviceType == typeof(global::Test.Nested.Transient3)) return FactoryTransient3_0();
-        if (serviceType == typeof(global::Test.Nested.TransientInterface4)) return CreateTransient4();
-        if (serviceType == typeof(global::Test.Nested.Transient4)) return CreateTransient4();
-        if (serviceType == typeof(global::Test.Nested.TransientInterface5)) return CreateTransient5();
+        if (serviceType == typeof(global::Test.Nested.TransientInterface4)) return CreateTransient4_0();
+        if (serviceType == typeof(global::Test.Nested.Transient4)) return CreateTransient4_0();
+        if (serviceType == typeof(global::Test.Nested.TransientInterface5)) return CreateTransient5_0();
         if (serviceType == typeof(global::Test.Nested.TransientInterface6)) return FactoryTransientInterface6_0();
-        if (serviceType == typeof(global::ExternalTransient1)) return CreateExternalTransient1();
-        if (serviceType == typeof(global::ExternalTransientInterface1)) return CreateExternalTransient2();
-        if (serviceType == typeof(global::ExternalTransient2)) return CreateExternalTransient2();
-        if (serviceType == typeof(global::ExternalTransientInterface2)) return CreateExternalTransient2();
+        if (serviceType == typeof(global::ExternalTransient1)) return CreateExternalTransient1_0();
+        if (serviceType == typeof(global::ExternalTransientInterface1)) return CreateExternalTransient2_0();
+        if (serviceType == typeof(global::ExternalTransient2)) return CreateExternalTransient2_0();
+        if (serviceType == typeof(global::ExternalTransientInterface2)) return CreateExternalTransient2_0();
         if (serviceType == typeof(global::ExternalTransient3)) return FactoryExternalTransient3_0();
-        if (serviceType == typeof(global::ExternalTransientInterface4)) return CreateExternalTransient4();
-        if (serviceType == typeof(global::ExternalTransient4)) return CreateExternalTransient4();
-        if (serviceType == typeof(global::ExternalTransientInterface5)) return CreateExternalTransient5();
+        if (serviceType == typeof(global::ExternalTransientInterface4)) return CreateExternalTransient4_0();
+        if (serviceType == typeof(global::ExternalTransient4)) return CreateExternalTransient4_0();
+        if (serviceType == typeof(global::ExternalTransientInterface5)) return CreateExternalTransient5_0();
         if (serviceType == typeof(global::ExternalTransientInterface6)) return FactoryExternalTransientInterface6_0();
 
         return null;
@@ -120,7 +124,7 @@ public partial class Provider
         return (T)GetService(typeof(T))!;
     }
 
-    private global::Test.Nested.Singleton1 CreateSingleton1()
+    private global::Test.Nested.Singleton1 CreateSingleton1_0()
     {
         lock (_sync)
         {
@@ -129,7 +133,7 @@ public partial class Provider
         }
     }
 
-    private global::Test.Nested.Singleton2 CreateSingleton2()
+    private global::Test.Nested.Singleton2 CreateSingleton2_0()
     {
         lock (_sync)
         {
@@ -147,7 +151,7 @@ public partial class Provider
         }
     }
 
-    private global::Test.Nested.Singleton4 CreateSingleton4()
+    private global::Test.Nested.Singleton4 CreateSingleton4_0()
     {
         lock (_sync)
         {
@@ -156,7 +160,7 @@ public partial class Provider
         }
     }
 
-    private global::Test.Nested.Singleton5 CreateSingleton5()
+    private global::Test.Nested.Singleton5 CreateSingleton5_0()
     {
         lock (_sync)
         {
@@ -174,7 +178,7 @@ public partial class Provider
         }
     }
 
-    private global::ExternalSingleton1 CreateExternalSingleton1()
+    private global::ExternalSingleton1 CreateExternalSingleton1_0()
     {
         lock (_sync)
         {
@@ -183,7 +187,7 @@ public partial class Provider
         }
     }
 
-    private global::ExternalSingleton2 CreateExternalSingleton2()
+    private global::ExternalSingleton2 CreateExternalSingleton2_0()
     {
         lock (_sync)
         {
@@ -201,7 +205,7 @@ public partial class Provider
         }
     }
 
-    private global::ExternalSingleton4 CreateExternalSingleton4()
+    private global::ExternalSingleton4 CreateExternalSingleton4_0()
     {
         lock (_sync)
         {
@@ -210,7 +214,7 @@ public partial class Provider
         }
     }
 
-    private global::ExternalSingleton5 CreateExternalSingleton5()
+    private global::ExternalSingleton5 CreateExternalSingleton5_0()
     {
         lock (_sync)
         {
@@ -228,7 +232,7 @@ public partial class Provider
         }
     }
 
-    private global::Test.Nested.Transient1 CreateTransient1()
+    private global::Test.Nested.Transient1 CreateTransient1_0()
     {
         lock (_sync)
         {
@@ -237,7 +241,7 @@ public partial class Provider
         }
     }
 
-    private global::Test.Nested.Transient2 CreateTransient2()
+    private global::Test.Nested.Transient2 CreateTransient2_0()
     {
         lock (_sync)
         {
@@ -255,7 +259,7 @@ public partial class Provider
         }
     }
 
-    private global::Test.Nested.Transient4 CreateTransient4()
+    private global::Test.Nested.Transient4 CreateTransient4_0()
     {
         lock (_sync)
         {
@@ -264,7 +268,7 @@ public partial class Provider
         }
     }
 
-    private global::Test.Nested.Transient5 CreateTransient5()
+    private global::Test.Nested.Transient5 CreateTransient5_0()
     {
         lock (_sync)
         {
@@ -282,7 +286,7 @@ public partial class Provider
         }
     }
 
-    private global::ExternalTransient1 CreateExternalTransient1()
+    private global::ExternalTransient1 CreateExternalTransient1_0()
     {
         lock (_sync)
         {
@@ -291,7 +295,7 @@ public partial class Provider
         }
     }
 
-    private global::ExternalTransient2 CreateExternalTransient2()
+    private global::ExternalTransient2 CreateExternalTransient2_0()
     {
         lock (_sync)
         {
@@ -309,7 +313,7 @@ public partial class Provider
         }
     }
 
-    private global::ExternalTransient4 CreateExternalTransient4()
+    private global::ExternalTransient4 CreateExternalTransient4_0()
     {
         lock (_sync)
         {
@@ -318,7 +322,7 @@ public partial class Provider
         }
     }
 
-    private global::ExternalTransient5 CreateExternalTransient5()
+    private global::ExternalTransient5 CreateExternalTransient5_0()
     {
         lock (_sync)
         {
@@ -377,6 +381,10 @@ public partial class Provider
             || serviceType == typeof(global::ExternalTransientInterface4)
             || serviceType == typeof(global::ExternalTransientInterface5)
             || serviceType == typeof(global::ExternalTransientInterface6)
+            || serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceProviderIsService)
+            || serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScope)
+            || serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory)
+            || serviceType == typeof(global::System.IServiceProvider)
             || serviceType == typeof(global::Test.Nested.Scoped1)
             || serviceType == typeof(global::Test.Nested.Scoped2)
             || serviceType == typeof(global::Test.Nested.Scoped3)

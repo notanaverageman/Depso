@@ -17,7 +17,7 @@ public partial class Provider
         private bool _isDisposed;
 
         private global::Dependency5? _dependency5_0;
-        private global::Dependency5 Dependency5_0 => _dependency5_0 ??= CreateDependency5();
+        private global::Dependency5 Dependency5_0 => _dependency5_0 ??= CreateDependency5_0();
 
         private global::System.Collections.Generic.IEnumerable<global::Dependency5>? _enumerableDependency5;
         private global::System.Collections.Generic.IEnumerable<global::Dependency5> EnumerableDependency5 => _enumerableDependency5 ??= CreateEnumerableDependency5();
@@ -36,12 +36,16 @@ public partial class Provider
 
         public object? GetService(global::System.Type serviceType)
         {
+            if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory)) return _root.GetService(serviceType);
+            if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceProviderIsService)) return _root.GetService(serviceType);
             if (serviceType == typeof(global::Interface1)) return _root.GetService(serviceType);
             if (serviceType == typeof(global::Interface2)) return _root.GetService(serviceType);
             if (serviceType == typeof(global::Service)) return _root.GetService(serviceType);
             if (serviceType == typeof(global::Dependency4)) return _root.GetService(serviceType);
+            if (serviceType == typeof(global::System.IServiceProvider)) return this;
+            if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScope)) return this;
             if (serviceType == typeof(global::Dependency5)) return Dependency5_0;
-            if (serviceType == typeof(global::Dependency6)) return _root.CreateDependency6();
+            if (serviceType == typeof(global::Dependency6)) return _root.CreateDependency6_0();
             if (serviceType == typeof(global::System.Collections.Generic.IEnumerable<global::Interface1>)) return _root.GetService(serviceType);
             if (serviceType == typeof(global::System.Collections.Generic.IEnumerable<global::Interface2>)) return _root.GetService(serviceType);
             if (serviceType == typeof(global::System.Collections.Generic.IEnumerable<global::Interface3>)) return _root.GetService(serviceType);
@@ -57,7 +61,7 @@ public partial class Provider
             return (T)GetService(typeof(T))!;
         }
 
-        private global::Dependency5 CreateDependency5()
+        private global::Dependency5 CreateDependency5_0()
         {
             lock (_sync)
             {

@@ -18,17 +18,21 @@ public partial class Provider
     private bool _isDisposed;
 
     private global::Dependency1? _dependency1_0;
-    private global::Dependency1 Dependency1_0 => _dependency1_0 ??= CreateDependency1();
+    private global::Dependency1 Dependency1_0 => _dependency1_0 ??= CreateDependency1_0();
 
     private global::Service? _service_0;
-    private global::Service Service_0 => _service_0 ??= CreateService();
+    private global::Service Service_0 => _service_0 ??= CreateService_0();
 
     global::Microsoft.Extensions.DependencyInjection.IServiceScope global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory.CreateScope() => this.CreateScope(_sync);
 
     public object? GetService(global::System.Type serviceType)
     {
+        if (serviceType == typeof(global::System.IServiceProvider)) return this;
+        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory)) return this;
+        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceProviderIsService)) return this;
         if (serviceType == typeof(global::Dependency1)) return Dependency1_0;
         if (serviceType == typeof(global::Service)) return Service_0;
+        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScope)) return RootScope.GetService(serviceType);
 
         return null;
     }
@@ -38,7 +42,7 @@ public partial class Provider
         return (T)GetService(typeof(T))!;
     }
 
-    private global::Dependency1 CreateDependency1()
+    private global::Dependency1 CreateDependency1_0()
     {
         lock (_sync)
         {
@@ -47,7 +51,7 @@ public partial class Provider
         }
     }
 
-    private global::Service CreateService()
+    private global::Service CreateService_0()
     {
         lock (_sync)
         {
@@ -71,7 +75,11 @@ public partial class Provider
 
         return false
             || serviceType == typeof(global::Dependency1)
-            || serviceType == typeof(global::Service);
+            || serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceProviderIsService)
+            || serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScope)
+            || serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory)
+            || serviceType == typeof(global::Service)
+            || serviceType == typeof(global::System.IServiceProvider);
     }
 
     public void Dispose()

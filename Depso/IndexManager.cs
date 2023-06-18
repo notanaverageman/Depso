@@ -7,11 +7,13 @@ public class IndexManager
 {
 	private readonly Dictionary<ITypeSymbol, int> _fieldIndexes;
 	private readonly Dictionary<ITypeSymbol, int> _createMethodIndexes;
+	private readonly Dictionary<ITypeSymbol, int> _createMethodIndexesNonFactory;
 	
 	public IndexManager()
 	{
 		_fieldIndexes = new Dictionary<ITypeSymbol, int>(SymbolEqualityComparer.Default);
 		_createMethodIndexes = new Dictionary<ITypeSymbol, int>(SymbolEqualityComparer.Default);
+		_createMethodIndexesNonFactory = new Dictionary<ITypeSymbol, int>(SymbolEqualityComparer.Default);
 	}
 	
 	public void Add(ServiceDescriptor serviceDescriptor)
@@ -35,14 +37,8 @@ public class IndexManager
 		INamedTypeSymbol serviceType = serviceDescriptor.ServiceType;
 		INamedTypeSymbol? implementationType = serviceDescriptor.ImplementationType;
 
-		int createMethodIndex = -1;
 		int fieldIndex = -1;
-
-		// Create method index is not used for generic or typeof registrations.
-		if (serviceDescriptor.Factory != null)
-		{
-			createMethodIndex = AddCreateMethodIndex(serviceType);
-		}
+		int createMethodIndex = AddCreateMethodIndex(serviceType, serviceDescriptor.Factory != null);
 
 		if (!isTransient)
 		{
@@ -52,9 +48,17 @@ public class IndexManager
 		serviceDescriptor.SetIndexes(new Index(fieldIndex, createMethodIndex));
 	}
 	
-	private int AddCreateMethodIndex(ITypeSymbol type)
+	private int AddCreateMethodIndex(ITypeSymbol type, bool isFactory)
 	{
 		type = NormalizeType(type);
+
+		if (!isFactory && _createMethodIndexesNonFactory.TryGetValue(type, out int indexNonFactory))
+		{
+			// Use the same index if the create method is not a factory, i.e. we create the service
+			// via generated code. This ensures that the same method will be used by multiple non-factory
+			// registrations.
+			return indexNonFactory;
+		}
 
 		if (!_createMethodIndexes.TryGetValue(type, out int index))
 		{
@@ -64,6 +68,11 @@ public class IndexManager
 		index++;
 
 		_createMethodIndexes[type] = index;
+
+		if (!_createMethodIndexesNonFactory.ContainsKey(type))
+		{
+			_createMethodIndexesNonFactory[type] = index;
+		}
 
 		return index;
 	}

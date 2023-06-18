@@ -18,27 +18,31 @@ public partial class Provider
     private bool _isDisposed;
 
     private global::Service1? _service1_0;
-    private global::Service1 Service1_0 => _service1_0 ??= CreateService1();
+    private global::Service1 Service1_0 => _service1_0 ??= CreateService1_0();
 
     private global::Service1? _service1_1;
-    private global::Service1 Service1_1 => _service1_1 ??= CreateService1();
+    private global::Service1 Service1_1 => _service1_1 ??= CreateService1_0();
 
     private global::Service2? _service2_0;
-    private global::Service2 Service2_0 => _service2_0 ??= CreateService2();
+    private global::Service2 Service2_0 => _service2_0 ??= CreateService2_0();
 
     private global::Service2? _service2_1;
-    private global::Service2 Service2_1 => _service2_1 ??= CreateService2();
+    private global::Service2 Service2_1 => _service2_1 ??= CreateService2_0();
 
     global::Microsoft.Extensions.DependencyInjection.IServiceScope global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory.CreateScope() => this.CreateScope(_sync);
 
     public object? GetService(global::System.Type serviceType)
     {
+        if (serviceType == typeof(global::System.IServiceProvider)) return this;
+        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory)) return this;
+        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceProviderIsService)) return this;
         if (serviceType == typeof(global::Interface1)) return Service1_0;
         if (serviceType == typeof(global::Service1)) return Service1_0;
         if (serviceType == typeof(global::InterfaceA)) return Service1_1;
         if (serviceType == typeof(global::Service2)) return Service2_1;
         if (serviceType == typeof(global::InterfaceB)) return Service2_0;
         if (serviceType == typeof(global::Interface2)) return Service2_0;
+        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScope)) return RootScope.GetService(serviceType);
 
         return null;
     }
@@ -48,7 +52,7 @@ public partial class Provider
         return (T)GetService(typeof(T))!;
     }
 
-    private global::Service1 CreateService1()
+    private global::Service1 CreateService1_0()
     {
         lock (_sync)
         {
@@ -57,7 +61,7 @@ public partial class Provider
         }
     }
 
-    private global::Service2 CreateService2()
+    private global::Service2 CreateService2_0()
     {
         lock (_sync)
         {
@@ -84,8 +88,12 @@ public partial class Provider
             || serviceType == typeof(global::Interface2)
             || serviceType == typeof(global::InterfaceA)
             || serviceType == typeof(global::InterfaceB)
+            || serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceProviderIsService)
+            || serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScope)
+            || serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory)
             || serviceType == typeof(global::Service1)
-            || serviceType == typeof(global::Service2);
+            || serviceType == typeof(global::Service2)
+            || serviceType == typeof(global::System.IServiceProvider);
     }
 
     public void Dispose()
@@ -120,10 +128,10 @@ public partial class Provider
 
         if (_rootScope != null) await _rootScope.DisposeAsync();
 
-        if (_service2_0 != null) await _service2_0.DisposeAsync();
-        if (_service2_1 != null) await _service2_1.DisposeAsync();
         if (_service1_0 != null) _service1_0.Dispose();
         if (_service1_1 != null) _service1_1.Dispose();
+        if (_service2_0 != null) await _service2_0.DisposeAsync();
+        if (_service2_1 != null) await _service2_1.DisposeAsync();
     }
 
     private void ThrowIfDisposed()

@@ -14,10 +14,10 @@
   </ItemGroup>
 
   <!--Enable and change the path accordingly to include the sources in the project to inspect the code using full IDE experience-->
-  <ItemGroup>
+  <!--<ItemGroup>
     <Compile Include="SourceCodes\Generators\Common\*.cs" />
     <Compile Include="SourceCodes\Generators\Import_modules\*.cs" />
-  </ItemGroup>
+  </ItemGroup>-->
   
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4">

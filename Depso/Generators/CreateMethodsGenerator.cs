@@ -1,4 +1,4 @@
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using Depso.CSharp;
 
@@ -20,7 +20,7 @@ public abstract class CreateMethodsGenerator : IGenerator
 			{
 				continue;
 			}
-			
+
 			if (serviceDescriptor.RedirectToThis)
 			{
 				continue;
@@ -34,7 +34,7 @@ public abstract class CreateMethodsGenerator : IGenerator
 				{
 					continue;
 				}
-				
+
 				string methodName = serviceDescriptor.GetCreateMethodName();
 
 				GenerateCreateMethod(generationContext, concreteType, methodName, isEnumerable: false);
