@@ -123,7 +123,7 @@ public partial class ServiceProviderGenerator : IIncrementalGenerator
 
 				SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(
 					registrationMethods,
-					CSharpParseOptions.Default.WithLanguageVersion(((CSharpCompilation)compilation).LanguageVersion));
+					(CSharpParseOptions)@class.SyntaxTree.Options);
 
 				context.AddSource(
 					$"{Constants.GeneratorNamespace}.{classSymbol.ToDisplayString()}.RegistrationMethods.g.cs",

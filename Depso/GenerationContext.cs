@@ -8,6 +8,7 @@ using QuickGraph.Algorithms.ConnectedComponents;
 using QuickGraph;
 using QuickGraph.Algorithms;
 using Depso.CSharp;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace Depso;
 
@@ -29,6 +30,7 @@ public class GenerationContext
 	public ClassDeclarationSyntax ClassSyntax { get; }
 	public INamedTypeSymbol ClassSymbol { get; }
 	public IMethodSymbol RegisterServicesMethod { get; }
+	public CSharpParseOptions ParseOptions { get; }
 	public IndexManager IndexManager { get; }
 	public CodeBuilder CodeBuilder { get; }
 
@@ -73,6 +75,7 @@ public class GenerationContext
 		ClassSyntax = classSyntax;
 		ClassSymbol = classSymbol;
 		RegisterServicesMethod = registerServicesMethod;
+		ParseOptions = (CSharpParseOptions)classSyntax.SyntaxTree.Options;
 		IsModule = isModule;
 
 		IndexManager = new IndexManager();
