@@ -58,6 +58,7 @@ public partial class Provider
         AddSingleton<InterfaceC>(x => (InterfaceC)x.GetService(typeof(Service2)));
         AddSingleton(Func);
         AddSingleton(GetService2).AlsoAs<Interface2>().AlsoAs<InterfaceB>();
+        AddSingleton(_ => StaticClass.Generic<IDisposable>());
         AddSingleton(x => new UsingStatic());
         AddSingleton<Service2>(StaticClass.StaticFunc);
         AddSingleton<Service2>(StaticFunc2);
@@ -73,4 +74,9 @@ public class StaticClass
 {
     public static readonly Func<IServiceProvider, Service2> StaticFunc = _ => new Service2();
     public static Func<IServiceProvider, Service2> StaticFunc2 => _ => new Service2();
+
+    public static Service2 Generic<T>()
+    {
+        return new Service2();
+    }
 }

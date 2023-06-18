@@ -35,14 +35,17 @@ public partial class Provider
     private global::Service2? _service2_0;
     private global::Service2 Service2_0 => _service2_0 ??= FactoryService2_0();
 
-    private global::System.Collections.Generic.List<global::System.Action>? _list1_1;
-    private global::System.Collections.Generic.List<global::System.Action> List1_1 => _list1_1 ??= FactoryList1_1();
-
     private global::Service2? _service2_1;
     private global::Service2 Service2_1 => _service2_1 ??= FactoryService2_1();
 
+    private global::System.Collections.Generic.List<global::System.Action>? _list1_1;
+    private global::System.Collections.Generic.List<global::System.Action> List1_1 => _list1_1 ??= FactoryList1_1();
+
     private global::Service2? _service2_2;
     private global::Service2 Service2_2 => _service2_2 ??= FactoryService2_2();
+
+    private global::Service2? _service2_3;
+    private global::Service2 Service2_3 => _service2_3 ??= FactoryService2_3();
 
     global::Microsoft.Extensions.DependencyInjection.IServiceScope global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory.CreateScope() => this.CreateScope(_sync);
 
@@ -57,7 +60,7 @@ public partial class Provider
         if (serviceType == typeof(global::System.Exception)) return Exception_0;
         if (serviceType == typeof(global::System.Collections.Generic.List<global::System.IDisposable>)) return List1_0;
         if (serviceType == typeof(global::InterfaceC)) return InterfaceC_0;
-        if (serviceType == typeof(global::Service2)) return Service2_2;
+        if (serviceType == typeof(global::Service2)) return Service2_3;
         if (serviceType == typeof(global::InterfaceB)) return Service2_0;
         if (serviceType == typeof(global::Interface2)) return Service2_0;
         if (serviceType == typeof(global::System.Collections.Generic.List<global::System.Action>)) return List1_1;
@@ -125,6 +128,15 @@ public partial class Provider
         }
     }
 
+    private global::Service2 FactoryService2_1()
+    {
+        lock (_sync)
+        {
+            ThrowIfDisposed();
+            return global::StaticClass.Generic<global::System.IDisposable>();
+        }
+    }
+
     private global::System.Collections.Generic.List<global::System.Action> FactoryList1_1()
     {
         lock (_sync)
@@ -134,7 +146,7 @@ public partial class Provider
         }
     }
 
-    private global::Service2 FactoryService2_1()
+    private global::Service2 FactoryService2_2()
     {
         lock (_sync)
         {
@@ -143,7 +155,7 @@ public partial class Provider
         }
     }
 
-    private global::Service2 FactoryService2_2()
+    private global::Service2 FactoryService2_3()
     {
         lock (_sync)
         {
@@ -219,6 +231,7 @@ public partial class Provider
         if (_service2_0 != null) await _service2_0.DisposeAsync();
         if (_service2_1 != null) await _service2_1.DisposeAsync();
         if (_service2_2 != null) await _service2_2.DisposeAsync();
+        if (_service2_3 != null) await _service2_3.DisposeAsync();
     }
 
     private void ThrowIfDisposed()

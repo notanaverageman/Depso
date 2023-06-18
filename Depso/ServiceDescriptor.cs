@@ -106,7 +106,7 @@ public class ServiceDescriptor
 
 		if (symbol is INamedTypeSymbol { IsGenericType: true } namedType)
 		{
-			genericSuffix = namedType.Arity.ToString();
+			genericSuffix = "_" + string.Join("_", namedType.TypeArguments.Select(x => x.Name));
 		}
 
 		return $"Create{symbol.Name}{genericSuffix}_{_indexes[symbol].CreateMethod}";

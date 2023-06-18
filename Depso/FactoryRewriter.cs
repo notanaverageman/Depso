@@ -196,32 +196,53 @@ public class FactoryRewriter : CSharpSyntaxRewriter
 			return base.VisitMemberAccessExpression(node);
 		}
 
+		SyntaxNode visitedExpression = Visit(node.Expression);
+		SyntaxNode visitedName = Visit(node.Name);
+
+		if (visitedExpression is ThisExpressionSyntax es && visitedName is MemberAccessExpressionSyntax)
+		{
+			return node.WithExpression(es);
+		}
+
 		if (symbol.IsStatic)
 		{
+			if (visitedName is MemberAccessExpressionSyntax m)
+			{
+				return m;
+			}
+
 			string containingType = symbol.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
 			return MemberAccessExpression(
 				SyntaxKind.SimpleMemberAccessExpression,
 				IdentifierName(containingType),
-				node.Name);
+				(SimpleNameSyntax)visitedName);
 		}
 
 		if (_generationContext is { IsScopeClass: true, IsModule: false })
 		{
+			if (visitedName is MemberAccessExpressionSyntax m)
+			{
+				return m;
+			}
+
 			return MemberAccessExpression(
 				SyntaxKind.SimpleMemberAccessExpression,
 				IdentifierName("this"),
-				node.Name);
+				(SimpleNameSyntax)visitedName);
 		}
-
-		SyntaxNode expression = Visit(node.Expression);
-
-		if (expression is ExpressionSyntax expressionSyntax)
+		
+		if (visitedExpression is ExpressionSyntax expressionSyntax)
 		{
+			if (visitedName is MemberAccessExpressionSyntax m)
+			{
+				return m;
+			}
+
 			return MemberAccessExpression(
 				SyntaxKind.SimpleMemberAccessExpression,
 				expressionSyntax,
-				node.Name);
+				(SimpleNameSyntax)visitedName);
 		}
 
 		return base.VisitMemberAccessExpression(node);
