@@ -4,8 +4,6 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <IsPackable>true</IsPackable>
-    <PackageVersion>1.0.0</PackageVersion>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,7 +16,6 @@
   </ItemGroup>
   
   <ItemGroup>
-    <None Include="../README.md" Pack="true" PackagePath="\"/>
     <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
   </ItemGroup>
 

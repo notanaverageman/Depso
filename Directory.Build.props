@@ -3,5 +3,17 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
+    <PackageVersion>1.0.0</PackageVersion>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Authors>Yusuf Tarık Günaydın</Authors>
+    <PackageDescription>Roslyn source generator to create compile time dependency injection container</PackageDescription>
+    <PackageTags>DependencyInjection;SourceGenerator;Roslyn;</PackageTags>
+    <PackageProjectUrl>https://github.com/notanaverageman/Depso</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/notanaverageman/Depso.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../README.md" Pack="true" PackagePath="\"/>
+  </ItemGroup>
 </Project>
