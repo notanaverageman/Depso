@@ -1,6 +1,7 @@
 # Depso Dependency Injection Source Generator
 
 [![NuGet Depso](https://img.shields.io/nuget/v/Depso.svg?label=Depso)](https://www.nuget.org/packages/Depso/)
+[![AppVeyor](https://img.shields.io/appveyor/ci/notanaverageman/depso.svg)](https://ci.appveyor.com/project/notanaverageman/depso)
 
 Depso is yet another source generator for dependency injection. However, it takes a different approach than existing
 source generators and uses a restricted subset of C# instead of using attributes to define dependencies. This leads to
@@ -53,7 +54,7 @@ public class TypeOf { }
 public partial class Container
 {
     // Declare the method to register services. Its signature must be
-    // private static void and it must be named RegisterServices.
+    // private void and it must be named as RegisterServices.
     private void RegisterServices()
     {
         // Register services by calling the AddSingleton, AddScoped, and AddTransient methods.
