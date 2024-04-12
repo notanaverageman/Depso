@@ -116,6 +116,7 @@ public class DependencyGraph
 		return stringBuilder.ToString();
 	}
 
+#nullable disable
 	private class ComparableVertexEdgeDictionary
 		:
 		Dictionary<INamedTypeSymbol, IEdgeList<INamedTypeSymbol, IEdge<INamedTypeSymbol>>>,

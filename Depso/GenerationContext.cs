@@ -289,7 +289,7 @@ public class GenerationContext
 			return result;
 		}
 
-		// No need to search for a constructor on non constructible types.
+		// No need to search for a constructor on non-constructible types.
 		if (symbol.IsAbstract || symbol.IsStatic || symbol.TypeKind == TypeKind.Interface)
 		{
 			result.SetError(ConstructorSelectionError.NotConstructible);
@@ -356,7 +356,7 @@ public class GenerationContext
 
 			if (selectedParameterCount == parameterCount)
 			{
-				// There are more than one constructors that can be satisfied with the same parameter
+				// There are more than one constructor that can be satisfied with the same parameter
 				// count.
 				result.AddAmibiguousConstructor(constructor);
 				result.AddAmibiguousConstructor(result.SelectedConstructor!);
