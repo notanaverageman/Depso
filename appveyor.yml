@@ -1,0 +1,21 @@
+image: Visual Studio 2022
+configuration: Release
+
+init:
+  - git config --global core.autocrlf false
+
+before_build:
+  - nuget restore
+
+build:
+  verbosity: minimal
+
+after_build:
+  - dotnet pack -c Release -o ./artifacts
+
+test:
+  assemblies:
+    - '**\*Test.dll'
+
+artifacts:
+- path: artifacts\*.nupkg
