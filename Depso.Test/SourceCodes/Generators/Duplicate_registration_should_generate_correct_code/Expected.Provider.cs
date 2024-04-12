@@ -63,9 +63,6 @@ public partial class Provider
 
     public object? GetService(global::System.Type serviceType)
     {
-        if (serviceType == typeof(global::System.IServiceProvider)) return this;
-        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory)) return this;
-        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceProviderIsService)) return this;
         if (serviceType == typeof(global::Service1)) return Service1_1;
         if (serviceType == typeof(global::Service2)) return Service3_0;
         if (serviceType == typeof(global::Service3)) return Service3_0;
@@ -76,6 +73,9 @@ public partial class Provider
         if (serviceType == typeof(global::Dependency3)) return Dependency3_0;
         if (serviceType == typeof(global::Interface3)) return Dependency4_0;
         if (serviceType == typeof(global::Interface4)) return Dependency4_1;
+        if (serviceType == typeof(global::System.IServiceProvider)) return this;
+        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory)) return this;
+        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceProviderIsService)) return this;
         if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScope)) return RootScope.GetService(serviceType);
 
         return null;

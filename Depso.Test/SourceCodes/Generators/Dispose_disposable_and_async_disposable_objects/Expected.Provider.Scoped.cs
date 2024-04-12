@@ -44,16 +44,12 @@ public partial class Provider
 
         public object? GetService(global::System.Type serviceType)
         {
-            if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory)) return _root.GetService(serviceType);
-            if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceProviderIsService)) return _root.GetService(serviceType);
             if (serviceType == typeof(global::Singleton1)) return _root.GetService(serviceType);
             if (serviceType == typeof(global::SingletonInterface1)) return _root.GetService(serviceType);
             if (serviceType == typeof(global::Singleton2)) return _root.GetService(serviceType);
             if (serviceType == typeof(global::SingletonInterface2)) return _root.GetService(serviceType);
             if (serviceType == typeof(global::Singleton3)) return _root.GetService(serviceType);
             if (serviceType == typeof(global::Singleton4)) return _root.GetService(serviceType);
-            if (serviceType == typeof(global::System.IServiceProvider)) return this;
-            if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScope)) return this;
             if (serviceType == typeof(global::Scoped1)) return Scoped1_0;
             if (serviceType == typeof(global::ScopedInterface1)) return Scoped1_0;
             if (serviceType == typeof(global::Scoped2)) return Scoped2_0;
@@ -66,6 +62,10 @@ public partial class Provider
             if (serviceType == typeof(global::TransientInterface2)) return CreateTransient2_0AddDisposable();
             if (serviceType == typeof(global::Transient3)) return CreateTransient3_0AddDisposable();
             if (serviceType == typeof(global::Transient4)) return CreateTransient4_0AddDisposable();
+            if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory)) return _root.GetService(serviceType);
+            if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceProviderIsService)) return _root.GetService(serviceType);
+            if (serviceType == typeof(global::System.IServiceProvider)) return this;
+            if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScope)) return this;
 
             return null;
         }

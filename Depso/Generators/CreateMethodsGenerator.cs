@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System;
+using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using Depso.CSharp;
 
@@ -37,14 +38,14 @@ public abstract class CreateMethodsGenerator : IGenerator
 
 				string methodName = serviceDescriptor.GetCreateMethodName();
 
-				GenerateCreateMethod(generationContext, concreteType, methodName, isEnumerable: false);
+				GenerateCreateMethod(generationContext, concreteType, methodName, isEnumerable: false, lockAndCheckDisposed: true);
 				ProcessServiceDescriptor(generationContext, serviceDescriptor, methodName);
 			}
 			else
 			{
 				string factoryMethodName = serviceDescriptor.GetFactoryMethodName();
 				
-				GenerateFactoryMethod(generationContext, serviceDescriptor, lifetime, factoryMethodName);
+				GenerateFactoryMethod(generationContext, serviceDescriptor, lifetime, factoryMethodName, lockAndCheckDisposed: true);
 				ProcessServiceDescriptor(generationContext, serviceDescriptor, factoryMethodName);
 			}
 		}
@@ -67,7 +68,7 @@ public abstract class CreateMethodsGenerator : IGenerator
 
 			string methodName = $"CreateEnumerable{type.Name.ToPascalCase()}";
 
-			GenerateCreateMethod(generationContext, type, methodName, isEnumerable: true);
+			GenerateCreateMethod(generationContext, type, methodName, isEnumerable: true, lockAndCheckDisposed: true);
 		}
 	}
 
@@ -75,7 +76,8 @@ public abstract class CreateMethodsGenerator : IGenerator
 		GenerationContext generationContext,
 		INamedTypeSymbol concreteType,
 		string methodName,
-		bool isEnumerable)
+		bool isEnumerable,
+		bool lockAndCheckDisposed)
 	{
 		CodeBuilder codeBuilder = generationContext.CodeBuilder;
 
@@ -91,19 +93,24 @@ public abstract class CreateMethodsGenerator : IGenerator
 
 		using (codeBuilder.Method(returnType, methodName).Private())
 		{
-			using (codeBuilder.Lock(Constants.LockFieldName))
+			IDisposable? lockDisposable = null;
+			
+			if (lockAndCheckDisposed)
 			{
+				lockDisposable = codeBuilder.Lock(Constants.LockFieldName);
 				codeBuilder.AppendLine($"{Constants.ThrowIfDisposedMethodName}();");
-
-				if (isEnumerable)
-				{
-					GenerateEnumerableFieldCreator(generationContext, concreteType, fieldTypeName);
-				}
-				else
-				{
-					GenerateFieldCreator(generationContext, concreteType, fieldTypeName);
-				}
 			}
+			
+			if (isEnumerable)
+			{
+				GenerateEnumerableFieldCreator(generationContext, concreteType, fieldTypeName, lockAndCheckDisposed);
+			}
+			else
+			{
+				GenerateFieldCreator(generationContext, concreteType, fieldTypeName, lockAndCheckDisposed);
+			}
+
+			lockDisposable?.Dispose();
 		}
 	}
 
@@ -111,7 +118,8 @@ public abstract class CreateMethodsGenerator : IGenerator
 		GenerationContext generationContext,
 		ServiceDescriptor serviceDescriptor,
 		Lifetime lifetime,
-		string methodName)
+		string methodName,
+		bool lockAndCheckDisposed)
 	{
 		generationContext.AddNewLineIfNecessary();
 
@@ -128,25 +136,31 @@ public abstract class CreateMethodsGenerator : IGenerator
 				serviceDescriptor.Factory!,
 				serviceProviderParameter: "this");
 
-			using (codeBuilder.Lock(Constants.LockFieldName))
+			IDisposable? lockDisposable = null;
+
+			if (lockAndCheckDisposed)
 			{
+				lockDisposable = codeBuilder.Lock(Constants.LockFieldName);
 				codeBuilder.AppendLine($"{Constants.ThrowIfDisposedMethodName}();");
-				int currentOffset = codeBuilder.CurrentOffset;
-
-				using System.IO.StringReader reader = new(factoryInvocation);
-				int lineCount = 0;
-
-				while (reader.ReadLine() is { } line)
-				{
-					codeBuilder.AppendLine(line.TrimStart());
-					lineCount++;
-				}
-
-				if (lineCount > 1)
-				{
-					codeBuilder.Insert(CodeBuilder.NewLine, currentOffset);
-				}
 			}
+
+			int currentOffset = codeBuilder.CurrentOffset;
+
+			using System.IO.StringReader reader = new(factoryInvocation);
+			int lineCount = 0;
+
+			while (reader.ReadLine() is { } line)
+			{
+				codeBuilder.AppendLine(line.TrimStart());
+				lineCount++;
+			}
+
+			if (lineCount > 1)
+			{
+				codeBuilder.Insert(CodeBuilder.NewLine, currentOffset);
+			}
+
+			lockDisposable?.Dispose();
 		}
 
 		generationContext.AddNewLine = true;
@@ -162,7 +176,8 @@ public abstract class CreateMethodsGenerator : IGenerator
 	private void GenerateFieldCreator(
 		GenerationContext generationContext,
 		INamedTypeSymbol typeSymbol,
-		string fieldTypeName)
+		string fieldTypeName,
+		bool lockAndCheckDisposed)
 	{
 		CodeBuilder codeBuilder = generationContext.CodeBuilder;
 		IReadOnlyList<ITypeSymbol>? dependencies = generationContext.GetConstructorParameters(typeSymbol);
@@ -188,7 +203,11 @@ public abstract class CreateMethodsGenerator : IGenerator
 			return;
 		}
 
-		codeBuilder.AppendLine();
+		if (lockAndCheckDisposed)
+		{
+			codeBuilder.AppendLine();
+		}
+		
 		codeBuilder.AppendLine($"return new {fieldTypeName}(");
 		codeBuilder.Indent();
 
@@ -212,7 +231,8 @@ public abstract class CreateMethodsGenerator : IGenerator
 	private void GenerateEnumerableFieldCreator(
 		GenerationContext generationContext,
 		INamedTypeSymbol typeSymbol,
-		string fieldTypeName)
+		string fieldTypeName,
+		bool lockAndCheckDisposed)
 	{
 		CodeBuilder codeBuilder = generationContext.CodeBuilder;
 		IReadOnlyList<ServiceDescriptor> serviceDescriptors = generationContext.GetEnumerableDescriptors(typeSymbol);
@@ -223,7 +243,11 @@ public abstract class CreateMethodsGenerator : IGenerator
 			return;
 		}
 
-		codeBuilder.AppendLine();
+		if (lockAndCheckDisposed)
+		{
+			codeBuilder.AppendLine();
+		}
+		
 		codeBuilder.AppendLine($"return new {fieldTypeName}[]");
 		codeBuilder.AppendLine("{");
 		codeBuilder.Indent();

@@ -30,11 +30,11 @@ public partial class Provider
 
         public object? GetService(global::System.Type serviceType)
         {
-            if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory)) return _root.GetService(serviceType);
-            if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceProviderIsService)) return _root.GetService(serviceType);
             if (serviceType == typeof(global::Dependency1)) return _root.GetService(serviceType);
             if (serviceType == typeof(global::Dependency2)) return _root.GetService(serviceType);
             if (serviceType == typeof(global::Service)) return _root.GetService(serviceType);
+            if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory)) return _root.GetService(serviceType);
+            if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceProviderIsService)) return _root.GetService(serviceType);
             if (serviceType == typeof(global::System.IServiceProvider)) return this;
             if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScope)) return this;
 

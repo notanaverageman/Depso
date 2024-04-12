@@ -19,28 +19,30 @@ public class TransientCreateMethodsGenerator : CreateMethodsGenerator
 		GenerationContext generationContext,
 		INamedTypeSymbol concreteType,
 		string methodName,
-		bool isEnumerable)
+		bool isEnumerable,
+		bool lockAndCheckDisposed)
 	{
 		if (generationContext.IsScopeClass)
 		{
 			return;
 		}
 
-		base.GenerateCreateMethod(generationContext, concreteType, methodName, isEnumerable);
+		base.GenerateCreateMethod(generationContext, concreteType, methodName, isEnumerable, lockAndCheckDisposed: false);
 	}
 
 	protected override void GenerateFactoryMethod(
 		GenerationContext generationContext,
 		ServiceDescriptor serviceDescriptor,
 		Lifetime lifetime,
-		string methodName)
+		string methodName,
+		bool lockAndCheckDisposed)
 	{
 		if (generationContext.IsScopeClass)
 		{
 			return;
 		}
 
-		base.GenerateFactoryMethod(generationContext, serviceDescriptor, lifetime, methodName);
+		base.GenerateFactoryMethod(generationContext, serviceDescriptor, lifetime, methodName, lockAndCheckDisposed: false);
 	}
 
 	protected override void ProcessServiceDescriptor(

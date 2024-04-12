@@ -19,6 +19,7 @@ public class ServiceDescriptor
 	public IReadOnlyList<INamedTypeSymbol>? AlsoRegisterAs { get; init; }
 	public SyntaxNode? Factory { get; init; }
 	public bool RedirectToThis { get; init; }
+	public int? Order { get; set; }
 
 	public INamedTypeSymbol ConcreteType => ImplementationType ?? ServiceType;
 

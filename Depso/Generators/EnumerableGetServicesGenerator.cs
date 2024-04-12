@@ -7,7 +7,7 @@ public class EnumerableGetServicesGenerator : IGenerator
 {
 	public void Generate(GenerationContext generationContext)
 	{
-		generationContext.GetServicesActions.Add(GenerateLines);
+		generationContext.GetServicesActions.Add(new GetServicesAction(GenerateLines, GetServicesAction.OrderEnumerables));
 	}
 
 	private static void GenerateLines(GenerationContext generationContext)

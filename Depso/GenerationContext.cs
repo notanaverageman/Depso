@@ -52,7 +52,7 @@ public class GenerationContext
 		HasTransientAsyncDisposable;
 
 	public List<Action<GenerationContext>> Actions { get; }
-	public List<Action<GenerationContext>> GetServicesActions { get; }
+	public List<GetServicesAction> GetServicesActions { get; }
 
 	public HashSet<ITypeSymbol> GetServicesProcessedTypes { get; }
 
@@ -89,7 +89,7 @@ public class GenerationContext
 		_dependencyGraph = new DependencyGraph(SymbolEqualityComparer.Default);
 
 		Actions = new List<Action<GenerationContext>>();
-		GetServicesActions = new List<Action<GenerationContext>>();
+		GetServicesActions = new List<GetServicesAction>();
 
 		GetServicesProcessedTypes = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
 	}

@@ -12,6 +12,8 @@ public partial class ServiceProviderGenerator
 {
 	private static bool PopulateServices(GenerationContext generationContext)
 	{
+		int order = GetServicesAction.OrderMedi;
+
 		// Add service provider interfaces to be able to resolve them via this instance.
 		void AddIfNotNull(INamedTypeSymbol? symbol, Lifetime lifetime)
 		{
@@ -19,8 +21,11 @@ public partial class ServiceProviderGenerator
 			{
 				ServiceDescriptor serviceDescriptor = new(lifetime, symbol)
 				{
-					RedirectToThis = true
+					RedirectToThis = true,
+					Order = order
 				};
+
+				order++;
 
 				generationContext.AddServiceDescriptor(serviceDescriptor);
 			}

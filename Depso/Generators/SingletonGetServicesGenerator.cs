@@ -10,6 +10,8 @@ public class SingletonGetServicesGenerator : IGenerator
 	{
 		IReadOnlyList<ServiceDescriptor> serviceDescriptors = generationContext.ServiceDescriptors;
 		HashSet<ITypeSymbol> processedTypes = generationContext.GetServicesProcessedTypes;
+		
+		int i = 0;
 
 		foreach (ServiceDescriptor serviceDescriptor in serviceDescriptors)
 		{
@@ -22,7 +24,12 @@ public class SingletonGetServicesGenerator : IGenerator
 
 			if (processedTypes.Add(serviceType))
 			{
-				generationContext.GetServicesActions.Add(x => ProcessType(x, serviceType));
+				int order = serviceDescriptor.Order ?? i;
+				i++;
+
+				generationContext.GetServicesActions.Add(new GetServicesAction(
+					x => ProcessType(x, serviceType),
+					GetServicesAction.OrderSingleton + order));
 			}
 
 			if (serviceDescriptor.AlsoRegisterAs == null)
@@ -37,7 +44,12 @@ public class SingletonGetServicesGenerator : IGenerator
 					continue;
 				}
 
-				generationContext.GetServicesActions.Add(x => ProcessType(x, alsoRegisterAs));
+				int order = serviceDescriptor.Order ?? i;
+				i++;
+
+				generationContext.GetServicesActions.Add(new GetServicesAction(
+					x => ProcessType(x, alsoRegisterAs),
+					GetServicesAction.OrderSingleton + order));
 			}
 		}
 	}

@@ -42,14 +42,10 @@ public partial class Provider
 
     public object? GetService(global::System.Type serviceType)
     {
-        if (serviceType == typeof(global::System.IServiceProvider)) return this;
-        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory)) return this;
-        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceProviderIsService)) return this;
         if (serviceType == typeof(global::Interface1)) return Dependency1_B_0;
         if (serviceType == typeof(global::Interface2)) return Dependency1_B_0;
         if (serviceType == typeof(global::Service)) return Service_0;
         if (serviceType == typeof(global::Dependency4)) return Dependency4_0;
-        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScope)) return RootScope.GetService(serviceType);
         if (serviceType == typeof(global::Dependency5)) return RootScope.GetService(serviceType);
         if (serviceType == typeof(global::Dependency6)) return CreateDependency6_0();
         if (serviceType == typeof(global::System.Collections.Generic.IEnumerable<global::Interface1>)) return EnumerableInterface1;
@@ -58,6 +54,10 @@ public partial class Provider
         if (serviceType == typeof(global::System.Collections.Generic.IEnumerable<global::Dependency4>)) return EnumerableDependency4;
         if (serviceType == typeof(global::System.Collections.Generic.IEnumerable<global::Dependency5>)) return RootScope.GetService(serviceType);
         if (serviceType == typeof(global::System.Collections.Generic.IEnumerable<global::Dependency6>)) return CreateEnumerableDependency6();
+        if (serviceType == typeof(global::System.IServiceProvider)) return this;
+        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory)) return this;
+        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceProviderIsService)) return this;
+        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScope)) return RootScope.GetService(serviceType);
 
         return null;
     }
@@ -153,25 +153,16 @@ public partial class Provider
 
     private global::Dependency6 CreateDependency6_0()
     {
-        lock (_sync)
-        {
-            ThrowIfDisposed();
-            return new global::Dependency6();
-        }
+        return new global::Dependency6();
     }
 
     private global::Dependency6[] CreateEnumerableDependency6()
     {
-        lock (_sync)
+        return new global::Dependency6[]
         {
-            ThrowIfDisposed();
-
-            return new global::Dependency6[]
-            {
-                CreateDependency6_0(),
-                CreateDependency6_0()
-            };
-        }
+            CreateDependency6_0(),
+            CreateDependency6_0()
+        };
     }
 
     private global::Provider.Scope CreateScope(object? sync)

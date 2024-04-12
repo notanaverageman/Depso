@@ -18,9 +18,11 @@ public class GetServiceMethodGenerator : IGenerator
 		using MethodBuilder method = codeBuilder.Method("object?", Constants.GetServiceMethodName);
 		method.AddParameter(Constants.TypeMetadataName.WithGlobalPrefix(), "serviceType");
 
-		foreach (Action<GenerationContext> action in generationContext.GetServicesActions)
+		generationContext.GetServicesActions.Sort();
+
+		foreach (GetServicesAction action in generationContext.GetServicesActions)
 		{
-			action(generationContext);
+			action.Action(generationContext);
 		}
 
 		generationContext.AddNewLineIfNecessary();

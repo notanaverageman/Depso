@@ -57,9 +57,6 @@ public partial class Provider
 
     public object? GetService(global::System.Type serviceType)
     {
-        if (serviceType == typeof(global::System.IServiceProvider)) return this;
-        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory)) return this;
-        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceProviderIsService)) return this;
         if (serviceType == typeof(global::Test.Nested.Singleton1)) return Singleton1_0;
         if (serviceType == typeof(global::Test.Nested.SingletonInterface1)) return Singleton2_0;
         if (serviceType == typeof(global::Test.Nested.Singleton2)) return Singleton2_0;
@@ -78,7 +75,6 @@ public partial class Provider
         if (serviceType == typeof(global::ExternalSingleton4)) return ExternalSingleton4_0;
         if (serviceType == typeof(global::ExternalSingletonInterface5)) return ExternalSingleton5_0;
         if (serviceType == typeof(global::ExternalSingletonInterface6)) return ExternalSingletonInterface6_0;
-        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScope)) return RootScope.GetService(serviceType);
         if (serviceType == typeof(global::Test.Nested.Scoped1)) return RootScope.GetService(serviceType);
         if (serviceType == typeof(global::Test.Nested.ScopedInterface1)) return RootScope.GetService(serviceType);
         if (serviceType == typeof(global::Test.Nested.Scoped2)) return RootScope.GetService(serviceType);
@@ -115,6 +111,10 @@ public partial class Provider
         if (serviceType == typeof(global::ExternalTransient4)) return CreateExternalTransient4_0();
         if (serviceType == typeof(global::ExternalTransientInterface5)) return CreateExternalTransient5_0();
         if (serviceType == typeof(global::ExternalTransientInterface6)) return FactoryExternalTransientInterface6_0();
+        if (serviceType == typeof(global::System.IServiceProvider)) return this;
+        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory)) return this;
+        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceProviderIsService)) return this;
+        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScope)) return RootScope.GetService(serviceType);
 
         return null;
     }
@@ -234,110 +234,62 @@ public partial class Provider
 
     private global::Test.Nested.Transient1 CreateTransient1_0()
     {
-        lock (_sync)
-        {
-            ThrowIfDisposed();
-            return new global::Test.Nested.Transient1();
-        }
+        return new global::Test.Nested.Transient1();
     }
 
     private global::Test.Nested.Transient2 CreateTransient2_0()
     {
-        lock (_sync)
-        {
-            ThrowIfDisposed();
-            return new global::Test.Nested.Transient2();
-        }
+        return new global::Test.Nested.Transient2();
     }
 
     private global::Test.Nested.Transient3 FactoryTransient3_0()
     {
-        lock (_sync)
-        {
-            ThrowIfDisposed();
-            return new global::Test.Nested.Transient3();
-        }
+        return new global::Test.Nested.Transient3();
     }
 
     private global::Test.Nested.Transient4 CreateTransient4_0()
     {
-        lock (_sync)
-        {
-            ThrowIfDisposed();
-            return new global::Test.Nested.Transient4();
-        }
+        return new global::Test.Nested.Transient4();
     }
 
     private global::Test.Nested.Transient5 CreateTransient5_0()
     {
-        lock (_sync)
-        {
-            ThrowIfDisposed();
-            return new global::Test.Nested.Transient5();
-        }
+        return new global::Test.Nested.Transient5();
     }
 
     private global::Test.Nested.TransientInterface6 FactoryTransientInterface6_0()
     {
-        lock (_sync)
-        {
-            ThrowIfDisposed();
-            return new global::Test.Nested.Transient6();
-        }
+        return new global::Test.Nested.Transient6();
     }
 
     private global::ExternalTransient1 CreateExternalTransient1_0()
     {
-        lock (_sync)
-        {
-            ThrowIfDisposed();
-            return new global::ExternalTransient1();
-        }
+        return new global::ExternalTransient1();
     }
 
     private global::ExternalTransient2 CreateExternalTransient2_0()
     {
-        lock (_sync)
-        {
-            ThrowIfDisposed();
-            return new global::ExternalTransient2();
-        }
+        return new global::ExternalTransient2();
     }
 
     private global::ExternalTransient3 FactoryExternalTransient3_0()
     {
-        lock (_sync)
-        {
-            ThrowIfDisposed();
-            return global::ExternalModule.FactoryExternalTransient3_0(this);
-        }
+        return global::ExternalModule.FactoryExternalTransient3_0(this);
     }
 
     private global::ExternalTransient4 CreateExternalTransient4_0()
     {
-        lock (_sync)
-        {
-            ThrowIfDisposed();
-            return new global::ExternalTransient4();
-        }
+        return new global::ExternalTransient4();
     }
 
     private global::ExternalTransient5 CreateExternalTransient5_0()
     {
-        lock (_sync)
-        {
-            ThrowIfDisposed();
-            return new global::ExternalTransient5();
-        }
+        return new global::ExternalTransient5();
     }
 
     private global::ExternalTransientInterface6 FactoryExternalTransientInterface6_0()
     {
-        lock (_sync)
-        {
-            ThrowIfDisposed();
-            return global::ExternalModule.FactoryExternalTransientInterface6_0(this);
-        }
+        return global::ExternalModule.FactoryExternalTransientInterface6_0(this);
     }
 
     private global::Provider.Scope CreateScope(object? sync)

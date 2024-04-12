@@ -23,10 +23,6 @@ public partial class Provider
 
     public object? GetService(global::System.Type serviceType)
     {
-        if (serviceType == typeof(global::System.IServiceProvider)) return this;
-        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory)) return this;
-        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceProviderIsService)) return this;
-        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScope)) return RootScope.GetService(serviceType);
         if (serviceType == typeof(global::Interface1)) return CreateService1_0AddDisposable();
         if (serviceType == typeof(global::Service1)) return CreateService1_0AddDisposable();
         if (serviceType == typeof(global::InterfaceA)) return CreateService1_0AddDisposable();
@@ -37,6 +33,10 @@ public partial class Provider
         if (serviceType == typeof(global::Interface3)) return CreateService3_0();
         if (serviceType == typeof(global::Service4)) return CreateService4_0();
         if (serviceType == typeof(global::Interface4)) return CreateService4_0();
+        if (serviceType == typeof(global::System.IServiceProvider)) return this;
+        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory)) return this;
+        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceProviderIsService)) return this;
+        if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScope)) return RootScope.GetService(serviceType);
 
         return null;
     }
@@ -48,11 +48,7 @@ public partial class Provider
 
     private global::Service1 CreateService1_0()
     {
-        lock (_sync)
-        {
-            ThrowIfDisposed();
-            return new global::Service1();
-        }
+        return new global::Service1();
     }
 
     private global::Service1 CreateService1_0AddDisposable()
@@ -65,11 +61,7 @@ public partial class Provider
 
     private global::Service2 CreateService2_0()
     {
-        lock (_sync)
-        {
-            ThrowIfDisposed();
-            return new global::Service2();
-        }
+        return new global::Service2();
     }
 
     private global::Service2 CreateService2_0AddDisposable()
@@ -82,28 +74,19 @@ public partial class Provider
 
     private global::Service3 CreateService3_0()
     {
-        lock (_sync)
-        {
-            ThrowIfDisposed();
-            return new global::Service3(GetService<global::Interface1>());
-        }
+        return new global::Service3(GetService<global::Interface1>());
     }
 
     private global::Service4 CreateService4_0()
     {
-        lock (_sync)
-        {
-            ThrowIfDisposed();
-
-            return new global::Service4(
-                GetService<global::Interface1>(),
-                GetService<global::InterfaceA>(),
-                GetService<global::Interface2>(),
-                GetService<global::Interface3>(),
-                GetService<global::Service1>(),
-                GetService<global::Service2>()
-            );
-        }
+        return new global::Service4(
+            GetService<global::Interface1>(),
+            GetService<global::InterfaceA>(),
+            GetService<global::Interface2>(),
+            GetService<global::Interface3>(),
+            GetService<global::Service1>(),
+            GetService<global::Service2>()
+        );
     }
 
     private global::Provider.Scope CreateScope(object? sync)

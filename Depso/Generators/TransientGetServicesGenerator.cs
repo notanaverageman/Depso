@@ -22,6 +22,8 @@ public class TransientGetServicesGenerator : IGenerator
 			indexManager.Add(serviceDescriptor);
 		}
 
+		int i = 0;
+
 		foreach (ServiceDescriptor serviceDescriptor in serviceDescriptors)
 		{
 			if (serviceDescriptor.Lifetime != Lifetime.Transient)
@@ -33,7 +35,13 @@ public class TransientGetServicesGenerator : IGenerator
 
 			if (processedTypes.Add(serviceType))
 			{
-				generationContext.GetServicesActions.Add(x => ProcessType(x, serviceType));
+				int order = serviceDescriptor.Order ?? i;
+				i++;
+
+				generationContext.GetServicesActions.Add(new GetServicesAction(
+					x => ProcessType(x, serviceType),
+					GetServicesAction.OrderTransient + order));
+
 			}
 
 			if (serviceDescriptor.AlsoRegisterAs == null)
@@ -45,7 +53,12 @@ public class TransientGetServicesGenerator : IGenerator
 			{
 				if (processedTypes.Add(alsoRegisterAs))
 				{
-					generationContext.GetServicesActions.Add(x => ProcessType(x, alsoRegisterAs));
+					int order = serviceDescriptor.Order ?? i;
+					i++;
+					
+					generationContext.GetServicesActions.Add(new GetServicesAction(
+						x => ProcessType(x, alsoRegisterAs),
+						GetServicesAction.OrderTransient + order));
 				}
 			}
 		}

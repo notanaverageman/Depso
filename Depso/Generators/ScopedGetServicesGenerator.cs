@@ -11,6 +11,8 @@ public class ScopedGetServicesGenerator : IGenerator
 		IReadOnlyList<ServiceDescriptor> serviceDescriptors = generationContext.ServiceDescriptors;
 		HashSet<ITypeSymbol> processedTypes = generationContext.GetServicesProcessedTypes;
 
+		int i = 0;
+
 		foreach (ServiceDescriptor serviceDescriptor in serviceDescriptors)
 		{
 			if (serviceDescriptor.Lifetime != Lifetime.Scoped)
@@ -22,13 +24,24 @@ public class ScopedGetServicesGenerator : IGenerator
 
 			if (serviceDescriptor.RedirectToThis && generationContext.IsScopeClass)
 			{
-				generationContext.GetServicesActions.Add(x => ProcessType(x, serviceDescriptor, serviceType));
+				int order = serviceDescriptor.Order ?? i;
+				i++;
+				
+				generationContext.GetServicesActions.Add(new GetServicesAction(
+					x => ProcessType(x, serviceDescriptor, serviceType),
+					GetServicesAction.OrderScoped + order));
+				
 				continue;
 			}
 
 			if (processedTypes.Add(serviceType))
 			{
-				generationContext.GetServicesActions.Add(x => ProcessType(x, serviceDescriptor, serviceType));
+				int order = serviceDescriptor.Order ?? i;
+				i++;
+
+				generationContext.GetServicesActions.Add(new GetServicesAction(
+					x => ProcessType(x, serviceDescriptor, serviceType),
+					GetServicesAction.OrderScoped + order));
 			}
 
 			if (serviceDescriptor.AlsoRegisterAs == null)
@@ -42,8 +55,13 @@ public class ScopedGetServicesGenerator : IGenerator
 				{
 					continue;
 				}
-				
-				generationContext.GetServicesActions.Add(x => ProcessType(x, serviceDescriptor, alsoRegisterAs));
+
+				int order = serviceDescriptor.Order ?? i;
+				i++;
+
+				generationContext.GetServicesActions.Add(new GetServicesAction(
+					x => ProcessType(x, serviceDescriptor, alsoRegisterAs),
+					GetServicesAction.OrderScoped + order));
 			}
 		}
 	}
