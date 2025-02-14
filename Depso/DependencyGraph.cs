@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
-using QuickGraph;
-using QuickGraph.Algorithms.Search;
-using QuickGraph.Collections;
+using QuikGraph;
+using QuikGraph.Algorithms.Search;
 
 namespace Depso;
 
@@ -13,19 +12,9 @@ public class DependencyGraph
 {
 	public BidirectionalGraph<INamedTypeSymbol, IEdge<INamedTypeSymbol>> Graph { get; }
 
-	public DependencyGraph(IEqualityComparer<INamedTypeSymbol>? equalityComparer = null)
+	public DependencyGraph()
 	{
-		Func<int, IVertexEdgeDictionary<INamedTypeSymbol, IEdge<INamedTypeSymbol>>>? dictionaryFactory = null;
-
-		if (equalityComparer != null)
-		{
-			dictionaryFactory = capacity => new ComparableVertexEdgeDictionary(capacity, equalityComparer);
-		}
-
-		Graph = new BidirectionalGraph<INamedTypeSymbol, IEdge<INamedTypeSymbol>>(
-			allowParallelEdges: false,
-			capacity: 0,
-			vertexEdgesDictionaryFactory: dictionaryFactory);
+		Graph = new BidirectionalGraph<INamedTypeSymbol, IEdge<INamedTypeSymbol>>(allowParallelEdges: false);
 	}
 
 	public void AddNode(
@@ -42,7 +31,7 @@ public class DependencyGraph
 	{
 		return Graph.ContainsVertex(node);
 	}
-	
+
 	public bool IsDirectedAcyclicGraph()
 	{
 		bool isDirectedAcyclicGraph = true;
@@ -114,38 +103,5 @@ public class DependencyGraph
 		stringBuilder.AppendLine();
 
 		return stringBuilder.ToString();
-	}
-
-#nullable disable
-	private class ComparableVertexEdgeDictionary
-		:
-		Dictionary<INamedTypeSymbol, IEdgeList<INamedTypeSymbol, IEdge<INamedTypeSymbol>>>,
-		IVertexEdgeDictionary<INamedTypeSymbol, IEdge<INamedTypeSymbol>>
-	{
-		public ComparableVertexEdgeDictionary(int capacity, IEqualityComparer<INamedTypeSymbol> comparer) : base(capacity, comparer)
-		{
-		}
-
-		private ComparableVertexEdgeDictionary Clone()
-		{
-			ComparableVertexEdgeDictionary clone = new(Count, Comparer);
-			
-			foreach (KeyValuePair<INamedTypeSymbol, IEdgeList<INamedTypeSymbol, IEdge<INamedTypeSymbol>>> kv in this)
-			{
-				clone.Add(kv.Key, kv.Value.Clone());
-			}
-
-			return clone;
-		}
-
-		IVertexEdgeDictionary<INamedTypeSymbol, IEdge<INamedTypeSymbol>> IVertexEdgeDictionary<INamedTypeSymbol, IEdge<INamedTypeSymbol>>.Clone()
-		{
-			return Clone();
-		}
-
-		object ICloneable.Clone()
-		{
-			return Clone();
-		}
 	}
 }

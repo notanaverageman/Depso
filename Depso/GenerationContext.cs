@@ -4,9 +4,9 @@ using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using QuickGraph.Algorithms.ConnectedComponents;
-using QuickGraph;
-using QuickGraph.Algorithms;
+using QuikGraph.Algorithms.ConnectedComponents;
+using QuikGraph;
+using QuikGraph.Algorithms;
 using Depso.CSharp;
 using Microsoft.CodeAnalysis.CSharp;
 
@@ -86,7 +86,7 @@ public class GenerationContext
 		_enumerableTypes = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
 		_serviceDescriptorCache = new ServiceDescriptorCache();
 		
-		_dependencyGraph = new DependencyGraph(SymbolEqualityComparer.Default);
+		_dependencyGraph = new DependencyGraph();
 
 		Actions = new List<Action<GenerationContext>>();
 		GetServicesActions = new List<GetServicesAction>();

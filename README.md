@@ -30,7 +30,7 @@ Add the `Depso` package to your project:
 
 ```xml
 <ItemGroup>
-    <PackageReference Include="Depso" Version="1.0.0" PrivateAssets="all" />
+    <PackageReference Include="Depso" Version="1.0.2" PrivateAssets="all" />
 </ItemGroup>
 ```
 

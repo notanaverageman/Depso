@@ -11,7 +11,6 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Testing;
-using Microsoft.CodeAnalysis.Testing.Verifiers;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 
@@ -80,6 +79,7 @@ public abstract class TestBase
 		});
 	}
 
+	[System.Diagnostics.CodeAnalysis.SuppressMessage("MicrosoftCodeAnalysisCorrectness", "RS1035:Do not use APIs banned for analyzers", Justification = "Test")]
 	public List<SyntaxTree> Generate<T>(
 		IEnumerable<SyntaxTree>? additionalSyntaxTrees = null,
 		IEnumerable<MetadataReference>? additionalReferences = null,
@@ -292,16 +292,21 @@ public abstract class TestBase
 			.ToArray();
 	}
 
+	[DiagnosticAnalyzer(LanguageNames.CSharp)]
+	[System.Diagnostics.CodeAnalysis.SuppressMessage("MicrosoftCodeAnalysisCorrectness", "RS1038:Compiler extensions should be implemented in assemblies with compiler-provided references", Justification = "Dummy")]
+	[System.Diagnostics.CodeAnalysis.SuppressMessage("MicrosoftCodeAnalysisCorrectness", "RS1041:Compiler extensions should be implemented in assemblies targeting netstandard2.0", Justification = "Dummy")]
 	private class DummyAnalyzer : DiagnosticAnalyzer
 	{
 		public override void Initialize(AnalysisContext context)
 		{
+			context.EnableConcurrentExecution();
+			context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze | GeneratedCodeAnalysisFlags.ReportDiagnostics);
 		}
 
 		public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray<DiagnosticDescriptor>.Empty;
 	}
 
-	private class GeneratorTest : CSharpAnalyzerTest<DummyAnalyzer, NUnitVerifier>
+	private class GeneratorTest : CSharpAnalyzerTest<DummyAnalyzer, DefaultVerifier>
 	{
 
 		public SolutionState ParseMarkup()

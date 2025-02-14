@@ -3,7 +3,8 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <PackageVersion>1.0.1</PackageVersion>
+    <AssemblyVersion>1.0.2</AssemblyVersion>
+    <PackageVersion>1.0.2</PackageVersion>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <Authors>Yusuf Tarık Günaydın</Authors>
     <PackageDescription>Roslyn source generator to create compile time dependency injection container</PackageDescription>

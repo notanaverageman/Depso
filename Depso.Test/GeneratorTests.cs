@@ -111,4 +111,10 @@ public class GeneratorTests : TestBase
 	{
 		GenerateAndCheck<ServiceProviderGenerator>();
 	}
+
+	[Test]
+	public void Nullable()
+	{
+		GenerateAndCheck<ServiceProviderGenerator>();
+	}
 }
