@@ -1,0 +1,25 @@
+{
+  "name": "depso",
+  "displayName": "Depso Source Generator",
+  "version": "1.0.3",
+  "unity": "2022.3",
+  "description": "C# source generator for dependency injection allowing a subset of the language instead of using attributes.",
+  "author": {
+    "name": "Yusuf Tarık Günaydın",
+    "url": "https://github.com/notanaverageman"
+  },
+  "license": "SEE LICENSE IN https://github.com/notanaverageman/Depso/blob/master/LICENSE",
+  "documentationUrl": "https://github.com/notanaverageman/Depso",
+  "changelogUrl": "https://github.com/notanaverageman/Depso",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/notanaverageman/Depso.git"
+  },
+  "keywords": [
+    "dependency-injection",
+    "source-generator",
+    "roslyn",
+    "unity",
+    "csharp"
+  ]
+}

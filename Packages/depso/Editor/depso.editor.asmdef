@@ -1,0 +1,6 @@
+{
+  "name": "depso.editor",
+  "rootNamespace": "Depso.Editor",
+  "includePlatforms": [ "Editor" ],
+  "autoReferenced": true
+}

@@ -30,7 +30,7 @@ Add the `Depso` package to your project:
 
 ```xml
 <ItemGroup>
-    <PackageReference Include="Depso" Version="1.0.2" PrivateAssets="all" />
+    <PackageReference Include="Depso" Version="1.0.3" PrivateAssets="all" />
 </ItemGroup>
 ```
 
@@ -188,6 +188,16 @@ public partial class Container
         ImportModule<Module>();
     }
 }
+```
+
+## Unity Package
+
+Depso can also be used directly inside Unity projects as a Roslyn **Source Generator** via Unity Package Manager.
+
+Add the package from Git:
+
+```text
+https://github.com/notanaverageman/Depso.git?path=Packages/depso#1.0.3
 ```
 
 ## Performance

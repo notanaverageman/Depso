@@ -1,0 +1,77 @@
+name: upm-version-branch
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  ANALYZERS_DIR: Packages/depso/Editor/Analyzers
+
+jobs:
+  build-and-publish-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      - name: Read version from Directory.Build.props
+        id: ver
+        run: |
+          VERSION=$(grep -oPm1 "(?<=<PackageVersion>)[^<]+" Directory.Build.props)
+          if [ -z "$VERSION" ]; then
+            echo "PackageVersion not found in Directory.Build.props"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Package version: $VERSION"
+
+      - name: Skip if version branch already exists
+        run: |
+          if git ls-remote --exit-code --heads origin "${{ steps.ver.outputs.version }}" >/dev/null 2>&1; then
+            echo "Branch '${{ steps.ver.outputs.version }}' already exists. Skipping workflow."
+            exit 0
+          fi
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore & Build (Release)
+        run: |
+          dotnet restore Depso/Depso.csproj
+          dotnet build Depso/Depso.csproj -c Release -nologo
+
+      - name: Switch/create version branch
+        run: |
+          VERSION="${{ steps.ver.outputs.version }}"
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin "$VERSION" >/dev/null 2>&1; then
+            git switch "$VERSION"
+          else
+            git switch -c "$VERSION"
+          fi
+
+      - name: Stage analyzers
+        run: |
+          set -e
+          mkdir -p "$ANALYZERS_DIR"
+          cp "Depso/bin/Release/netstandard2.0/Depso.dll" "$ANALYZERS_DIR/Depso.dll"
+          cp "Depso/bin/Release/netstandard2.0/QuikGraph.dll" "$ANALYZERS_DIR/QuikGraph.dll"
+          ls -la "$ANALYZERS_DIR"
+
+      - name: Commit & push to version branch
+        run: |
+          git add "$ANALYZERS_DIR"
+          if git diff --cached --quiet; then
+            echo "No analyzer changes to commit."
+          else
+            VERSION="${{ steps.ver.outputs.version }}"
+            git commit -m "build(${VERSION}): embed analyzers (Depso + QuikGraph) [skip ci]"
+            git push -u origin "$VERSION"
+          fi
