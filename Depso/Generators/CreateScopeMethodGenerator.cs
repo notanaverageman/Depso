@@ -19,10 +19,19 @@ public class CreateScopeMethodGenerator : IGenerator
 
 		string scopeType = $"{classSymbol.ToDisplayString()}.{Constants.ScopeClassName}".WithGlobalPrefix();
 
-		using MethodBuilder methodBuilder = codeBuilder.Method(scopeType, Constants.CreateScopeMethodName).Private();
-		methodBuilder.AddParameter("object?", "sync");
+		using (MethodBuilder methodBuilder = codeBuilder.Method(scopeType, Constants.CreateScopeMethodName).Private())
+		{
+			methodBuilder.AddParameter("object?", "sync");
 
-		codeBuilder.AppendLine($"{Constants.ThrowIfDisposedMethodName}();");
-		codeBuilder.AppendLine($"return new {scopeType}(this, sync);");
+			codeBuilder.AppendLine($"{Constants.ThrowIfDisposedMethodName}();");
+			codeBuilder.AppendLine($"return new {scopeType}(this, sync);");
+		}
+
+		codeBuilder.AppendLine();
+
+		using (codeBuilder.Method(scopeType, Constants.CreateScopeMethodName).Public())
+		{
+			codeBuilder.AppendLine($"return this.CreateScope({Constants.LockFieldName});");
+		}
 	}
 }

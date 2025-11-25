@@ -170,6 +170,11 @@ public partial class Provider
         return new global::Provider.Scope(this, sync);
     }
 
+    public global::Provider.Scope CreateScope()
+    {
+        return this.CreateScope(_sync);
+    }
+
     public bool IsService(global::System.Type serviceType)
     {
         if (serviceType.IsGenericType && serviceType.GetGenericTypeDefinition() == typeof(global::System.Collections.Generic.IEnumerable<>))
