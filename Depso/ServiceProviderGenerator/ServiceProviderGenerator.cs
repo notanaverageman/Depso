@@ -269,7 +269,7 @@ public partial class ServiceProviderGenerator : IIncrementalGenerator
 				generationContext.IndexManager.Add(serviceDescriptor);
 			}
 
-			AddModuleAttributes(codeBuilder);
+			AddModuleAttributes(generationContext, codeBuilder);
 		}
 
 		using (AddNamespace(classSymbol, codeBuilder))
@@ -422,11 +422,18 @@ public partial class ServiceProviderGenerator : IIncrementalGenerator
 		return codeBuilder.ToString();
 	}
 	
-	private static void AddModuleAttributes(CodeBuilder codeBuilder)
+	private static void AddModuleAttributes(GenerationContext generationContext, CodeBuilder codeBuilder)
 	{
-		const string generatedModuleAttribute = $$"""
+		string visibilityModifier = "file";
+
+		if (generationContext.Compilation is CSharpCompilation { LanguageVersion: <= LanguageVersion.CSharp10 })
+		{
+			visibilityModifier = "internal";
+		}
+
+		string generatedModuleAttribute = $$"""
 			[global::System.AttributeUsage(global::System.AttributeTargets.Class)]
-			file class {{Constants.GeneratedModuleAttributeClassName}} : global::System.Attribute
+			{{visibilityModifier}} class {{Constants.GeneratedModuleAttributeClassName}} : global::System.Attribute
 			{
 			}
 			""";
@@ -442,7 +449,7 @@ public partial class ServiceProviderGenerator : IIncrementalGenerator
 		{
 			string attributeClass = $$"""
 				[global::System.AttributeUsage(global::System.AttributeTargets.Class, AllowMultiple = true)]
-				file class {{name}}Attribute : global::System.Attribute
+				{{visibilityModifier}} class {{name}}Attribute : global::System.Attribute
 				{
 				    public {{name}}Attribute(
 				        global::System.Type serviceType,
