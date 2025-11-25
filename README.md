@@ -30,7 +30,7 @@ Add the `Depso` package to your project:
 
 ```xml
 <ItemGroup>
-    <PackageReference Include="Depso" Version="1.0.3" PrivateAssets="all" />
+    <PackageReference Include="Depso" Version="1.0.4" PrivateAssets="all" />
 </ItemGroup>
 ```
 
@@ -197,7 +197,7 @@ Depso can also be used directly inside Unity projects as a Roslyn **Source Gener
 Add the package from Git:
 
 ```text
-https://github.com/notanaverageman/Depso.git?path=Packages/depso#1.0.3
+https://github.com/notanaverageman/Depso.git?path=Packages/depso#1.0.4
 ```
 
 ## Performance

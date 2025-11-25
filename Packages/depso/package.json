@@ -1,7 +1,7 @@
 {
   "name": "depso",
   "displayName": "Depso Source Generator",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "unity": "2022.3",
   "description": "C# source generator for dependency injection allowing a subset of the language instead of using attributes.",
   "author": {
