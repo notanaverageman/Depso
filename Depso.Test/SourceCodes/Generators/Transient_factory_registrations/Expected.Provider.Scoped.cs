@@ -40,7 +40,7 @@ public partial class Provider
             if (serviceType == typeof(global::InterfaceC)) return _root.FactoryInterfaceC_0();
             if (serviceType == typeof(global::Service2)) return FactoryService2_2AddDisposable();
             if (serviceType == typeof(global::InterfaceB)) return FactoryService2_0AddDisposable();
-            if (serviceType == typeof(global::Interface2)) return FactoryService2_0AddDisposable();
+            if (serviceType == typeof(global::Interface2)) return FactoryService2_3AddDisposable();
             if (serviceType == typeof(global::System.Collections.Generic.List<global::System.Action>)) return _root.FactoryList1_1();
             if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory)) return _root.GetService(serviceType);
             if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceProviderIsService)) return _root.GetService(serviceType);
@@ -90,6 +90,14 @@ public partial class Provider
         private global::Service2 FactoryService2_2AddDisposable()
         {
             global::Service2 service = _root.FactoryService2_2();
+            AddAsyncDisposable(service);
+
+            return service;
+        }
+
+        private global::Service2 FactoryService2_3AddDisposable()
+        {
+            global::Service2 service = _root.FactoryService2_3();
             AddAsyncDisposable(service);
 
             return service;

@@ -47,6 +47,9 @@ public partial class Provider
     private global::Service2? _service2_3;
     private global::Service2 Service2_3 => _service2_3 ??= FactoryService2_3();
 
+    private global::Service2? _service2_4;
+    private global::Service2 Service2_4 => _service2_4 ??= FactoryService2_4();
+
     global::Microsoft.Extensions.DependencyInjection.IServiceScope global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory.CreateScope() => this.CreateScope(_sync);
 
     public object? GetService(global::System.Type serviceType)
@@ -59,7 +62,7 @@ public partial class Provider
         if (serviceType == typeof(global::InterfaceC)) return InterfaceC_0;
         if (serviceType == typeof(global::Service2)) return Service2_3;
         if (serviceType == typeof(global::InterfaceB)) return Service2_0;
-        if (serviceType == typeof(global::Interface2)) return Service2_0;
+        if (serviceType == typeof(global::Interface2)) return Service2_4;
         if (serviceType == typeof(global::System.Collections.Generic.List<global::System.Action>)) return List1_1;
         if (serviceType == typeof(global::System.IServiceProvider)) return this;
         if (serviceType == typeof(global::Microsoft.Extensions.DependencyInjection.IServiceScopeFactory)) return this;
@@ -164,6 +167,15 @@ public partial class Provider
         }
     }
 
+    private global::Service2 FactoryService2_4()
+    {
+        lock (_sync)
+        {
+            ThrowIfDisposed();
+            return global::StaticClass.Concrete(this);
+        }
+    }
+
     private global::Provider.Scope CreateScope(object? sync)
     {
         ThrowIfDisposed();
@@ -237,6 +249,7 @@ public partial class Provider
         if (_service2_1 != null) await _service2_1.DisposeAsync();
         if (_service2_2 != null) await _service2_2.DisposeAsync();
         if (_service2_3 != null) await _service2_3.DisposeAsync();
+        if (_service2_4 != null) await _service2_4.DisposeAsync();
     }
 
     private void ThrowIfDisposed()

@@ -61,6 +61,7 @@ public partial class Provider
         AddScoped(x => new UsingStatic());
         AddScoped<Service2>(StaticClass.StaticFunc);
         AddScoped<Service2>(StaticFunc2);
+        AddScoped<Interface2>(StaticClass.Concrete);
     }
 
     private Service2 GetService2(IServiceProvider serviceProvider)
@@ -73,4 +74,9 @@ public class StaticClass
 {
     public static readonly Func<IServiceProvider, Service2> StaticFunc = _ => new Service2();
     public static Func<IServiceProvider, Service2> StaticFunc2 => _ => new Service2();
+
+    public static Service2 Concrete(IServiceProvider _)
+    {
+        return new Service2();
+    }
 }

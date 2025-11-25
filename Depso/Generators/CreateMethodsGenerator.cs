@@ -124,7 +124,7 @@ public abstract class CreateMethodsGenerator : IGenerator
 		generationContext.AddNewLineIfNecessary();
 
 		CodeBuilder codeBuilder = generationContext.CodeBuilder;
-		INamedTypeSymbol serviceType = serviceDescriptor.ServiceType;
+		INamedTypeSymbol serviceType = serviceDescriptor.ImplementationType ?? serviceDescriptor.ServiceType;
 
 		string fieldTypeName = serviceType
 			.WithNullableAnnotation(NullableAnnotation.None)

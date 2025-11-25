@@ -12,12 +12,9 @@ public class ScopedGetServicesGenerator : Generators.ScopedGetServicesGenerator
 	{
 		CodeBuilder codeBuilder = generationContext.CodeBuilder;
 
-		if (serviceDescriptor.Factory == null)
-		{
-			serviceDescriptor = generationContext.GetEffectiveServiceDescriptorForType(
-				serviceType,
-				Lifetime.Scoped);
-		}
+		serviceDescriptor = generationContext.GetEffectiveServiceDescriptorForType(
+			serviceType,
+			Lifetime.Scoped);
 
 		string typeName = serviceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 

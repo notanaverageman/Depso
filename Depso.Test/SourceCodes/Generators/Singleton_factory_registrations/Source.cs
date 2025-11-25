@@ -62,6 +62,7 @@ public partial class Provider
         AddSingleton(x => new UsingStatic());
         AddSingleton<Service2>(StaticClass.StaticFunc);
         AddSingleton<Service2>(StaticFunc2);
+        AddSingleton<Interface2>(StaticClass.Concrete);
     }
 
     private Service2 GetService2(IServiceProvider serviceProvider)
@@ -76,6 +77,11 @@ public class StaticClass
     public static Func<IServiceProvider, Service2> StaticFunc2 => _ => new Service2();
 
     public static Service2 Generic<T>()
+    {
+        return new Service2();
+    }
+
+    public static Service2 Concrete(IServiceProvider _)
     {
         return new Service2();
     }

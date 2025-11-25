@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
+using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Depso;
 
@@ -321,11 +322,13 @@ public partial class ServiceProviderGenerator
 			return;
 		}
 
+		SeparatedSyntaxList<TypeSyntax> typeArguments = generic.TypeArgumentList.Arguments;
+
 		if (invocation.ArgumentList.Arguments.Count == 1)
 		{
 			ArgumentSyntax argument = invocation.ArgumentList.Arguments[0];
 
-			if (HandleFunc(argument.Expression, lifetime.Value, generationContext, memberAccessContext))
+			if (HandleFunc(argument.Expression, typeArguments, lifetime.Value, generationContext, memberAccessContext))
 			{
 				return;
 			}
@@ -337,8 +340,6 @@ public partial class ServiceProviderGenerator
 			return;
 		}
 		
-		SeparatedSyntaxList<TypeSyntax> typeArguments = generic.TypeArgumentList.Arguments;
-
 		if (typeArguments.Count == 1)
 		{
 			INamedTypeSymbol? symbol = GetSymbol(typeArguments[0]);
@@ -488,7 +489,7 @@ public partial class ServiceProviderGenerator
 
 		if (firstArgument is LambdaExpressionSyntax lambda)
 		{
-			if (HandleFunc(lambda, lifetime.Value, generationContext, memberAccessContext))
+			if (HandleFunc(lambda, SeparatedList<TypeSyntax>(), lifetime.Value, generationContext, memberAccessContext))
 			{
 				return;
 			}
@@ -496,7 +497,7 @@ public partial class ServiceProviderGenerator
 
 		if (firstArgument is IdentifierNameSyntax func)
 		{
-			if (HandleFunc(func, lifetime.Value, generationContext, memberAccessContext))
+			if (HandleFunc(func, SeparatedList<TypeSyntax>(), lifetime.Value, generationContext, memberAccessContext))
 			{
 				return;
 			}
@@ -513,13 +514,14 @@ public partial class ServiceProviderGenerator
 
 	private static bool HandleFunc(
 		SyntaxNode syntaxNode,
+		SeparatedSyntaxList<TypeSyntax> typeArguments,
 		Lifetime lifetime,
 		GenerationContext generationContext,
 		MemberAccessContext memberAccessContext)
 	{
 		ISymbol? symbol = generationContext.Compilation.GetSymbolInfo(syntaxNode).Symbol;
 
-		if (HandleFuncMethod(syntaxNode, symbol, lifetime, generationContext, memberAccessContext))
+		if (HandleFuncMethod(syntaxNode, typeArguments, symbol, lifetime, generationContext, memberAccessContext))
 		{
 			return true;
 		}
@@ -539,6 +541,7 @@ public partial class ServiceProviderGenerator
 
 	private static bool HandleFuncMethod(
 		SyntaxNode syntaxNode,
+		SeparatedSyntaxList<TypeSyntax> typeArguments,
 		ISymbol? symbol,
 		Lifetime lifetime,
 		GenerationContext generationContext,
@@ -576,9 +579,22 @@ public partial class ServiceProviderGenerator
 			return false;
 		}
 
+		INamedTypeSymbol serviceType = returnType;
+		INamedTypeSymbol? implementationType = null;
+
+		if (typeArguments.Count > 0 && generationContext.Compilation.GetSymbolInfo(typeArguments.First()).Symbol is INamedTypeSymbol genericType)
+		{
+			if (!SymbolEqualityComparer.Default.Equals(genericType, returnType))
+			{
+				serviceType = genericType;
+				implementationType = returnType;
+			}
+		}
+
 		generationContext.AddServiceDescriptor(new ServiceDescriptor(
 			lifetime,
-			returnType,
+			serviceType,
+			implementationType,
 			factory: syntaxNode,
 			alsoRegisterAs: memberAccessContext.AlsoRegisterAs));
 

@@ -18,7 +18,7 @@ public class IndexManager
 	
 	public void Add(ServiceDescriptor serviceDescriptor)
 	{
-		// Singleton and scoped services need a field index and they also increment the create method indexes.
+		// Singleton and scoped services need a field index, and they also increment the create method indexes.
 		// Transient services only increment the create method indexes as they don't have fields.
 
 		// Create method index is determined by the service type as it will be the return type of the method.
@@ -38,7 +38,7 @@ public class IndexManager
 		INamedTypeSymbol? implementationType = serviceDescriptor.ImplementationType;
 
 		int fieldIndex = -1;
-		int createMethodIndex = AddCreateMethodIndex(serviceType, serviceDescriptor.Factory != null);
+		int createMethodIndex = AddCreateMethodIndex(implementationType ?? serviceType, serviceDescriptor.Factory != null);
 
 		if (!isTransient)
 		{

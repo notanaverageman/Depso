@@ -24,7 +24,8 @@ public class ScopedFieldsFactoryGenerator : IGenerator
 				continue;
 			}
 
-			ITypeSymbol fieldType = serviceDescriptor.ServiceType.WithNullableAnnotation(NullableAnnotation.None);
+			ITypeSymbol fieldType = serviceDescriptor.ImplementationType ?? serviceDescriptor.ServiceType;
+			fieldType = fieldType.WithNullableAnnotation(NullableAnnotation.None);
 
 			indexManager.Add(serviceDescriptor);
 
